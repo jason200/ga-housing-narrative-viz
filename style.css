@@ -1,34 +1,47 @@
 body {
   font-family: sans-serif;
-  margin: 20px;
+  margin: 0;
+  padding: 0 20px;
 }
 
 h1 {
   text-align: center;
+  margin-top: 1em;
 }
 
-#controls {
-  text-align: center;
-  margin-bottom: 10px;
+#scrolly {
+  display: flex;
+  margin-top: 2em;
 }
 
-button {
-  padding: 6px 12px;
-  margin: 0 5px;
-  font-size: 14px;
+/* graphic area */
+#graphic {
+  flex: 1;
+  position: sticky;
+  top: 100px;         /* so it sticks while scrolling text */
+  height: 400px;
 }
 
-.nav-link {
-  text-align: center;
-  margin-top: 15px;
+/* narrative text */
+#text {
+  flex: 1;
+  margin-left: 40px;
 }
 
-svg {
-  border: 1px solid #ccc;
-  background: #fafafa;
+.step {
+  margin: 0 auto 200px;
+  opacity: 0.2;
+  transition: opacity 0.3s;
+  max-width: 300px;
 }
 
-.annotation-note {
-  font-size: 12px;
-  fill: #333;
+.step.is-active {
+  opacity: 1;
 }
+
+/* small reset for links */
+a {
+  color: steelblue;
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
