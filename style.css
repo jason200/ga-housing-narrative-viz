@@ -1,5 +1,25 @@
-body { font-family: sans-serif; margin: 20px; }
-#controls { text-align: center; margin-bottom: 10px; }
-button { padding: 6px 12px; margin: 0 5px; }
-svg { border: 1px solid #ccc; background: #fafafa; }
-.annotation-note { font-size: 12px; fill: #333; }
+body {
+  font-family: sans-serif;
+  margin: 20px;
+}
+
+#controls {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+button {
+  padding: 6px 12px;
+  margin: 0 5px;
+  font-size: 14px;
+}
+
+svg {
+  border: 1px solid #ccc;
+  background: #fafafa;
+}
+
+.annotation-note {
+  font-size: 12px;
+  fill: #333;
+}
