@@ -1,23 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>GA Housing Narrative Viz</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <meta charset="UTF-8">
+  <title>Georgia Home-Value Trends</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Georgia Home‐Value Trends</h1>
-  <div id="controls">
-    <button id="prev">◀ Back</button>
-    <button id="next">Next ▶</button>
+  <h1>Georgia Home-Value Trends</h1>
+
+  <div id="scrolly">
+    <div id="graphic"></div>
+    <div id="text">
+      <div class="step" data-step="1">
+        <p>Here’s how median home values have changed over time.</p>
+      </div>
+      <div class="step" data-step="2">
+        <p>Notice the dip after 2008, then the rebound.</p>
+      </div>
+      <div class="step" data-step="3">
+        <p>Want to explore more metrics?  
+           <a href="dashboard.html">Switch to the dashboard view.</a>
+        </p>
+      </div>
+    </div>
   </div>
-  <svg id="viz" width="800" height="500"></svg>
 
-  <p class="nav-link">
-    Or switch to the <a href="dashboard.html">dashboard view</a>.
-  </p>
-
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <script src="https://unpkg.com/scrollama"></script>
   <script src="main.js"></script>
 </body>
 </html>
