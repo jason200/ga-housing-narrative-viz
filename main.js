@@ -1,127 +1,124 @@
-// Global state and scenes array
-let state = { scene: 1 };
-const scenes = [drawScene1, drawScene2];
+// main.js
+const width  = 500,
+      height = 400,
+      margin = { top: 40, right: 20, bottom: 40, left: 50 };
 
-// When the page loads, draw the first scene
-draw();
+let svg = d3.select("#graphic")
+  .append("svg")
+    .attr("width",  width + margin.left + margin.right)
+    .attr("height", height + margin.top  + margin.bottom)
+  .append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
 
-// Redraw whenever scene changes
-d3.select("#next").on("click", () => {
-  state.scene = Math.min(state.scene + 1, scenes.length);
-  draw();
+// load data once
+d3.csv("data/home_values.csv", d => ({
+  year:   +d.year,
+  median: +d.median  // your CSV must have columns "year" and "median"
+})).then(data => {
+  // keep it in outer scope
+  window.narrativeData = data;
+  initScroll();
 });
-d3.select("#prev").on("click", () => {
-  state.scene = Math.max(state.scene - 1, 1);
-  draw();
-});
 
-function draw() {
-  const svg = d3.select("#viz");
-  svg.selectAll("*").remove();
-  scenes[state.scene - 1]();
+function initScroll() {
+  const scroller = scrollama();
+
+  scroller
+    .setup({
+      step: ".step",
+      offset: 0.6
+    })
+    .onStepEnter(response => {
+      d3.selectAll(".step").classed("is-active", d => d3.select(d.target).datum() === response.element ? true : false);
+      drawScene(+response.element.getAttribute("data-step"));
+    });
 }
 
-function drawScene1() {
-  // Sample bar chart
-  const data = [
-    { name: "A", value: 30 },
-    { name: "B", value: 80 },
-    { name: "C", value: 45 },
-  ];
-  const svg = d3.select("#viz"),
-        W = +svg.attr("width"),
-        H = +svg.attr("height"),
-        margin = { top: 40, right: 20, bottom: 40, left: 50 },
-        w = W - margin.left - margin.right,
-        h = H - margin.top - margin.bottom;
+function drawScene(step) {
+  if (step === 1) drawBars();
+  if (step === 2) drawLine();
+  // step 3 is just the “Switch to dashboard” link, no chart update
+}
+
+function drawBars() {
+  const data = window.narrativeData.slice(-5);  // last 5 years, for example
+
+  // clear
+  svg.selectAll("*").remove();
 
   const x = d3.scaleBand()
-      .domain(data.map(d => d.name))
-      .range([0, w])
-      .padding(0.2);
+      .domain(data.map(d => d.year))
+      .range([0, width])
+      .padding(0.3);
 
   const y = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.value)])
-      .nice()
-      .range([h, 0]);
+      .domain([0, d3.max(data, d => d.median)*1.1])
+      .range([height, 0]);
 
-  const g = svg.append("g")
-      .attr("transform", `translate(${margin.left},${margin.top})`);
+  svg.append("g")
+     .call(d3.axisLeft(y));
 
-  g.append("g")
-    .attr("transform", `translate(0,${h})`)
-    .call(d3.axisBottom(x));
+  svg.append("g")
+     .attr("transform", `translate(0,${height})`)
+     .call(d3.axisBottom(x).tickFormat(d3.format("d")));
 
-  g.append("g")
-    .call(d3.axisLeft(y));
-
-  g.selectAll(".bar")
+  svg.selectAll(".bar")
     .data(data)
     .join("rect")
       .attr("class","bar")
-      .attr("x", d => x(d.name))
-      .attr("y", d => y(d.value))
+      .attr("x", d => x(d.year))
+      .attr("y", d => y(d.median))
       .attr("width", x.bandwidth())
-      .attr("height", d => h - y(d.value))
-      .attr("fill", "#69b3a2");
+      .attr("height", d => height - y(d.median))
+      .attr("fill", "teal");
 
-  g.append("text")
-    .attr("class","annotation-note")
-    .attr("x", x("B") + x.bandwidth()/2)
-    .attr("y", y(80) - 10)
-    .attr("text-anchor","middle")
-    .text("Highest value here");
+  // annotation
+  const top = data[data.length-1];
+  svg.append("text")
+     .attr("x", x(top.year) + x.bandwidth()/2)
+     .attr("y", y(top.median) - 6)
+     .attr("text-anchor","middle")
+     .text("Latest value");
 }
 
-function drawScene2() {
-  // Sample line chart
-  const data = [
-    { x: 1, y: 2 },
-    { x: 2, y: 5 },
-    { x: 3, y: 3 },
-    { x: 4, y: 7 },
-  ];
-  const svg = d3.select("#viz"),
-        W = +svg.attr("width"),
-        H = +svg.attr("height"),
-        margin = { top: 40, right: 20, bottom: 40, left: 50 },
-        w = W - margin.left - margin.right,
-        h = H - margin.top - margin.bottom;
+function drawLine() {
+  const data = window.narrativeData;
+
+  // clear
+  svg.selectAll("*").remove();
 
   const x = d3.scaleLinear()
-      .domain(d3.extent(data, d => d.x))
-      .range([0, w]);
+      .domain(d3.extent(data, d => d.year))
+      .range([0, width]);
 
   const y = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.y)])
-      .nice()
-      .range([h, 0]);
+      .domain([0, d3.max(data, d => d.median)*1.1])
+      .range([height, 0]);
 
-  const g = svg.append("g")
-      .attr("transform", `translate(${margin.left},${margin.top})`);
+  svg.append("g")
+     .call(d3.axisLeft(y));
 
-  g.append("g")
-    .attr("transform", `translate(0,${h})`)
-    .call(d3.axisBottom(x).ticks(4).tickFormat(d3.format("d")));
-
-  g.append("g")
-    .call(d3.axisLeft(y));
+  svg.append("g")
+     .attr("transform", `translate(0,${height})`)
+     .call(d3.axisBottom(x).ticks(data.length).tickFormat(d3.format("d")));
 
   const line = d3.line()
-      .x(d => x(d.x))
-      .y(d => y(d.y));
+    .x(d => x(d.year))
+    .y(d => y(d.median));
 
-  g.append("path")
-    .datum(data)
-    .attr("fill","none")
-    .attr("stroke","#ff7f0e")
-    .attr("stroke-width",2)
-    .attr("d", line);
+  svg.append("path")
+     .datum(data)
+     .attr("fill","none")
+     .attr("stroke","orange")
+     .attr("stroke-width",2)
+     .attr("d", line);
 
-  g.append("text")
-    .attr("class","annotation-note")
-    .attr("x", x(4))
-    .attr("y", y(7) - 10)
-    .attr("text-anchor","end")
-    .text("Peak value");
+  // annotation at the very end
+  const last = data[data.length-1];
+  svg.append("text")
+     .attr("x", x(last.year))
+     .attr("y", y(last.median) - 10)
+     .attr("text-anchor","end")
+     .attr("fill","orange")
+     .text("Peak value");
 }
