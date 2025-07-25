@@ -1,100 +1,95 @@
-Promise.all([
-  d3.csv("data/home_values.csv", d3.autoType),
-  d3.json("geo/counties_topo.json")
-]).then(([raw, topo]) => {
-  drawTimeSeries(raw);
-  drawChoropleth(raw, topo);
+// dashboard.js
+
+const dmb = { top: 30, right: 20, bottom: 40, left: 50 };
+const dashWidth  = 400 - dmb.left - dmb.right;
+const dashHeight = 350 - dmb.top  - dmb.bottom;
+
+// load the same CSV (must exist at data/home_values.csv)
+d3.csv("data/home_values.csv", d => ({
+  year:   +d.year,
+  median: +d.median
+})).then(data => {
+  drawLeftBar(data);
+  drawRightLine(data);
 });
 
-function drawTimeSeries(data) {
-  const svg = d3.select("#timeseries"),
-        W = +svg.attr("width"),
-        H = +svg.attr("height"),
-        margin = { top: 40, right: 20, bottom: 40, left: 50 },
-        w = W - margin.left - margin.right,
-        h = H - margin.top - margin.bottom;
+function drawLeftBar(data) {
+  const svg = d3.select("#bar-chart")
+    .append("svg")
+      .attr("width",  dashWidth + dmb.left + dmb.right)
+      .attr("height", dashHeight + dmb.top + dmb.bottom)
+    .append("g")
+      .attr("transform", `translate(${dmb.left},${dmb.top})`);
 
-  // pivot data into time series for Georgia (or nest by county if you want multiples)
-  // here we assume home_values.csv has: year, county, median_value fields
-  const gaSeries = data
-    .filter(d => d.county === "Georgia")   // or whichever key
-    .sort((a,b) => d3.ascending(a.year,b.year));
+  // just show first & last for demo
+  const sub = data.filter(d => d.year % 5 === 0);
 
-  const x = d3.scaleLinear()
-      .domain(d3.extent(gaSeries, d => d.year))
-      .range([0, w]);
+  const x = d3.scaleBand()
+      .domain(sub.map(d => d.year))
+      .range([0, dashWidth])
+      .padding(0.3);
 
   const y = d3.scaleLinear()
-      .domain([0, d3.max(gaSeries, d => d.median_value)])
-      .nice()
-      .range([h, 0]);
+      .domain([0, d3.max(sub, d => d.median)*1.1])
+      .range([dashHeight, 0]);
 
-  const g = svg.append("g")
-      .attr("transform", `translate(${margin.left},${margin.top})`);
+  svg.append("g").call(d3.axisLeft(y).ticks(5));
+  svg.append("g")
+     .attr("transform", `translate(0,${dashHeight})`)
+     .call(d3.axisBottom(x).tickFormat(d3.format("d")));
 
-  g.append("g")
-    .attr("transform", `translate(0,${h})`)
-    .call(d3.axisBottom(x).tickFormat(d3.format("d")));
-
-  g.append("g")
-    .call(d3.axisLeft(y));
-
-  const line = d3.line()
-      .x(d => x(d.year))
-      .y(d => y(d.median_value));
-
-  g.append("path")
-    .datum(gaSeries)
-    .attr("fill","none")
-    .attr("stroke","#4682b4")
-    .attr("stroke-width",2)
-    .attr("d", line);
+  svg.selectAll("rect")
+    .data(sub)
+    .join("rect")
+      .attr("x", d => x(d.year))
+      .attr("y", d => y(d.median))
+      .attr("width", x.bandwidth())
+      .attr("height", d => dashHeight - y(d.median))
+      .attr("fill", "steelblue");
 
   svg.append("text")
-     .attr("x", W/2).attr("y", margin.top/2)
+     .attr("x", dashWidth/2)
+     .attr("y", -10)
      .attr("text-anchor","middle")
-     .text("Median Home Value in Georgia (2000–2025)");
+     .text("Median Value every 5 years");
 }
 
-function drawChoropleth(data, topo) {
-  const svg = d3.select("#map"),
-        W = +svg.attr("width"),
-        H = +svg.attr("height"),
-        margin = { top: 40, right: 20, bottom: 40, left: 20 },
-        w = W - margin.left - margin.right,
-        h = H - margin.top - margin.bottom;
+function drawRightLine(data) {
+  const svg = d3.select("#line-chart")
+    .append("svg")
+      .attr("width",  dashWidth + dmb.left + dmb.right)
+      .attr("height", dashHeight + dmb.top + dmb.bottom)
+    .append("g")
+      .attr("transform", `translate(${dmb.left},${dmb.top})`);
 
-  // pick latest year per county
-  const latestYear = d3.max(data, d => d.year);
-  const latestData = new Map(
-    data.filter(d => d.year === latestYear)
-        .map(d => [d.county, d.median_value])
-  );
+  const x = d3.scaleLinear()
+      .domain(d3.extent(data, d => d.year))
+      .range([0, dashWidth]);
 
-  const geojson = topojson.feature(topo, topo.objects.counties);
-  const projection = d3.geoIdentity()
-      .fitSize([w, h], geojson);
-  const path = d3.geoPath(projection);
+  const y = d3.scaleLinear()
+      .domain([0, d3.max(data, d => d.median)*1.1])
+      .range([dashHeight, 0]);
 
-  const values = Array.from(latestData.values());
-  const color = d3.scaleSequential(d3.interpolateBlues)
-      .domain([d3.min(values), d3.max(values)]);
+  svg.append("g").call(d3.axisLeft(y).ticks(5));
+  svg.append("g")
+     .attr("transform", `translate(0,${dashHeight})`)
+     .call(d3.axisBottom(x).ticks(6).tickFormat(d3.format("d")));
 
-  const g = svg.append("g")
-      .attr("transform", `translate(${margin.left},${margin.top})`);
+  const line = d3.line()
+     .x(d => x(d.year))
+     .y(d => y(d.median));
 
-  g.selectAll("path")
-    .data(geojson.features)
-    .join("path")
-      .attr("d", path)
-      .attr("fill", d => {
-        const v = latestData.get(d.properties.NAME);
-        return v != null ? color(v) : "#eee";
-      })
-      .attr("stroke","#999");
+  svg.append("path")
+     .datum(data)
+     .attr("fill","none")
+     .attr("stroke","tomato")
+     .attr("stroke-width",2)
+     .attr("d", line);
 
   svg.append("text")
-     .attr("x", W/2).attr("y", margin.top/2)
-     .attr("text-anchor","middle")
-     .text(`Median Home Value by County (${latestYear})`);
+     .attr("x", dashWidth)
+     .attr("y", y(data[data.length-1].median) - 10)
+     .attr("text-anchor","end")
+     .attr("fill","tomato")
+     .text("Full series");
 }
