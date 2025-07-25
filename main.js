@@ -11,16 +11,30 @@ const svg = d3.select("#graphic")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
 // load data
-d3.csv("data/home_values.csv", d => ({
-  year:   +d.year,
-  median: +d.median
-}))
-.then(data => {
-  window.narrativeData = data;
-  initScroll();
-  drawScene(1);
-})
-.catch(console.error);
+// main.js
+// …at the top of the file…
+
+d3.csv("data/home_values.csv")
+  .then(rawRows => {
+    console.log("🔍 raw CSV rows:", rawRows);
+    const data = rawRows.map(d => {
+      // try both lowercase and uppercase until you see real numbers in the console
+      const year   = +d.year   || +d.Year;
+      const median = +d.median || +d.Median || +d.Value;
+      return { year, median };
+    });
+    console.log("✅ parsed data:", data);
+
+    // stash for the rest of your scenes
+    window.narrativeData = data;
+
+    initScroll();
+    drawScene(1);
+  })
+  .catch(err => {
+    console.error("❌ failed to load CSV:", err);
+  });
+
 
 function initScroll() {
   const scroller = scrollama();
