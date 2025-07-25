@@ -3,6 +3,10 @@ body {
   margin: 20px;
 }
 
+h1 {
+  text-align: center;
+}
+
 #controls {
   text-align: center;
   margin-bottom: 10px;
@@ -12,6 +16,11 @@ button {
   padding: 6px 12px;
   margin: 0 5px;
   font-size: 14px;
+}
+
+.nav-link {
+  text-align: center;
+  margin-top: 15px;
 }
 
 svg {
