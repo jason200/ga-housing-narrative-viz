@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Georgia Home‑Value Map</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #fafafa; color: #333; }
+    h1 { text-align: center; margin-bottom: 30px; }
+    #map { width: 100%; max-width: 900px; height: 600px; margin: 0 auto; }
+    .nav { text-align: center; margin-bottom: 20px; }
+    .nav a { margin: 0 10px; color: #5c2ca4; text-decoration: none; font-weight: bold; }
+    .nav a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<h1>Georgia Median Home Values by State</h1>
+<p class="nav">
+  <a href="index.html">Overview</a> |
+  <a href="dashboard.html">Dashboard</a> |
+  <a href="narrative.html">Narrative</a>
+</p>
+
+<div id="map"></div>
+
+<script>
+  const mapSpec = {
+    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+    "description": "US states choropleth of median home values in 2025, highlighting Georgia.",
+    "width": 900,
+    "height": 600,
+    "projection": { "type": "albersUsa" },
+    "data": {
+      "url": "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json",
+      "format": { "type": "topojson", "feature": "states" }
+    },
+    "transform": [
+      {
+        "lookup": "properties.name",
+        "from": {
+          "data": {
+            "url": "data/home_values.csv",
+            "format": { "type": "csv" }
+          },
+          "key": "RegionName",
+          "fields": ["2025-01-31"]
+        }
+      }
+    ],
+    "mark": "geoshape",
+    "encoding": {
+      "color": {
+        "field": "2025-01-31",
+        "type": "quantitative",
+        "title": "Median Value ($)",
+        "scale": { "scheme": "blues" }
+      },
+      "tooltip": [
+        { "field": "properties.name", "title": "State" },
+        { "field": "2025-01-31", "title": "Median Value", "format": "$,.0f" }
+      ]
+    }
+  };
+
+  vegaEmbed('#map', mapSpec, { actions: false });
+</script>
+
+</body>
+</html>
