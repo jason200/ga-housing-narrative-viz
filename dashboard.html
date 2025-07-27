@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Georgia Home‑Value Dashboard</title>
 
   <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -11,78 +11,134 @@
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
 
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; background: #fafafa; }
-    h1 { text-align: center; margin-bottom: 10px; }
-    .nav { text-align: center; margin-bottom: 30px; }
-    .nav a { margin: 0 10px; color: #5c2ca4; text-decoration: none; font-weight: bold; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-    .box { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    .chart { width: 100%; height: 300px; }
-    .caption { text-align: center; font-weight: bold; margin-top: 10px; color: #333; }
-    .desc { text-align: center; font-size: 13px; color: #666; margin-top: 5px; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background: #fafafa;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .nav {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .nav a {
+      margin: 0 10px;
+      color: #5c2ca4;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .nav a:hover {
+      text-decoration: underline;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+    .box {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .chart {
+      width: 100%;
+      /* container will control exact width */
+    }
+    .caption {
+      text-align: center;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .desc {
+      text-align: center;
+      font-size: 13px;
+      color: #666;
+      margin-top: 5px;
+    }
   </style>
 </head>
 <body>
 
-<h1>Georgia Home‑Value Dashboard</h1>
-<div class="nav">
-  <a href="index.html">← Overview</a> |
-  <a href="narrative.html">Narrative</a>
-</div>
-
-<div class="grid">
-  <div class="box">
-    <div id="lineChart" class="chart"></div>
-    <div class="caption">📈 Monthly Median Home Values (2000–2025)</div>
-    <div class="desc">Full month‑by‑month trend showing the 2008–2010 dip and subsequent rebound.</div>
+  <h1>Georgia Home‑Value Dashboard</h1>
+  <div class="nav">
+    <a href="index.html">← Overview</a> |
+    <a href="narrative.html">Narrative</a>
   </div>
-  <div class="box">
-    <div id="barChart" class="chart"></div>
-    <div class="caption">🏡 2025 Median Home Value Snapshot</div>
-    <div class="desc">Georgia’s median home values for each month of 2025.</div>
+
+  <div class="grid">
+    <div class="box">
+      <div id="lineChart" class="chart"></div>
+      <div class="caption">📈 Monthly Median Home Values (2000–2025)</div>
+      <div class="desc">Full month‑by‑month trend showing the 2008–2010 dip and subsequent rebound.</div>
+    </div>
+    <div class="box">
+      <div id="barChart" class="chart"></div>
+      <div class="caption">🏡 2025 Median Home Value Snapshot</div>
+      <div class="desc">Georgia’s median home values for each month of 2025.</div>
+    </div>
   </div>
-</div>
 
-<script>
-d3.csv('data/home_values.csv').then(raw => {
-  const row = raw.find(r => r.RegionName === 'Georgia');
-  const entries = Object.entries(row)
-    .filter(([k]) => /^\d{4}-\d{2}-\d{2}$/.test(k))
-    .map(([date,v]) => ({ date, value: +v }));
+  <script>
+    d3.csv('data/home_values.csv').then(raw => {
+      const row = raw.find(r => r.RegionName === 'Georgia');
+      const allEntries = Object.entries(row)
+        .filter(([k]) => /^\d{4}-\d{2}-\d{2}$/.test(k))
+        .map(([date, v]) => ({ date, value: +v }));
 
-  const lineSpec = {
-    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-    "data": { "values": entries },
-    "mark": "line",
-    "encoding": {
-      "x": { "field": "date", "type": "temporal", "title": "Year" },
-      "y": { "field": "value", "type": "quantitative", "title": "Median Value ($)" },
-      "tooltip": [
-        { "field": "date", "title": "Month", "format": "%Y‑%m" },
-        { "field": "value", "title": "Value", "format": "$,.0f" }
-      ]
-    }
-  };
+      // Full trend line chart
+      const lineSpec = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "width": 500,
+        "height": 350,
+        "data": { "values": allEntries },
+        "mark": { "type": "line", "color": "#4682b4", "interpolate": "monotone" },
+        "encoding": {
+          "x": {
+            "field": "date", "type": "temporal", "title": "Year",
+            "axis": { "format": "%Y", "tickCount": 6 }
+          },
+          "y": {
+            "field": "value", "type": "quantitative", "title": "Median Value ($)"
+          },
+          "tooltip": [
+            { "field": "date", "title": "Month", "format": "%Y-%m" },
+            { "field": "value", "title": "Value", "format": "$,.0f" }
+          ]
+        }
+      };
 
-  const snapshot = entries.filter(d => d.date.startsWith('2025-'));
-  const barSpec = {
-    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-    "data": { "values": snapshot },
-    "mark": "bar",
-    "encoding": {
-      "x": { "field": "date", "type": "ordinal", "title": "Month of 2025" },
-      "y": { "field": "value", "type": "quantitative", "title": "Median Value ($)" },
-      "tooltip": [
-        { "field": "date", "title": "Month", "format": "%Y‑%m" },
-        { "field": "value", "title": "Value", "format": "$,.0f" }
-      ]
-    }
-  };
+      // 2025 snapshot bar chart
+      const snapshot = allEntries.filter(d => d.date.startsWith('2025-'));
+      const barSpec = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "width": 300,
+        "height": 350,
+        "data": { "values": snapshot },
+        "mark": "bar",
+        "encoding": {
+          "x": {
+            "field": "date", "type": "ordinal", "title": "Month of 2025",
+            "axis": { "labelAngle": -45 }
+          },
+          "y": {
+            "field": "value", "type": "quantitative", "title": "Median Value ($)"
+          },
+          "tooltip": [
+            { "field": "date", "title": "Month", "format": "%Y-%m" },
+            { "field": "value", "title": "Value", "format": "$,.0f" }
+          ]
+        }
+      };
 
-  vegaEmbed('#lineChart', lineSpec, { actions: false, renderer: 'svg' });
-  vegaEmbed('#barChart',  barSpec,  { actions: false, renderer: 'svg' });
-});
-</script>
+      vegaEmbed('#lineChart', lineSpec, { actions: false });
+      vegaEmbed('#barChart',  barSpec,  { actions: false });
+    });
+  </script>
 
 </body>
 </html>
