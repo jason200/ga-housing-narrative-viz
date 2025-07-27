@@ -2,30 +2,66 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Georgia Home-Value Trends</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      line-height: 1.6;
+      background-color: #fafafa;
+    }
+    .container {
+      display: flex;
+      gap: 40px;
+      align-items: flex-start;
+    }
+    .chart {
+      flex: 1;
+    }
+    .text {
+      flex: 1;
+      max-width: 450px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    footer {
+      margin-top: 40px;
+      text-align: center;
+    }
+    a {
+      color: #5c2ca4;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
+
   <h1>Georgia Home-Value Trends</h1>
 
-  <div id="scrolly">
-    <div id="graphic"></div>
-    <div id="narrative">
-      <section data-step="0"><h2>Latest (every 5 years)</h2></section>
-      <section data-step="1"><h2>Full 25-year trend</h2></section>
-      <section data-step="2"><h2>Notice the sharp dip around 2008</h2></section>
-      <section data-step="3">
-        <h2>
-          Want more interactivity?  
-          <a href="dashboard.html">Switch to the dashboard view.</a>
-        </h2>
-      </section>
+  <div class="container">
+    <div class="chart">
+      <!-- Insert your chart script/div here -->
+    </div>
+    <div class="text">
+      <h2>What’s happening?</h2>
+      <p>Here’s how median home values in Georgia have shifted over the last 25 years. 
+      This bar chart shows key milestones.</p>
+
+      <h2>Key Takeaway</h2>
+      <p>Notice the dip after 2008 (housing crash), then the steady rebound leading into 2025.</p>
     </div>
   </div>
 
-  <!-- D3 + Scrollama -->
-  <script src="https://unpkg.com/d3@6"></script>
-  <script src="https://unpkg.com/scrollama"></script>
-  <script type="module" src="main.js"></script>
+  <footer>
+    <p>Want more detail? <a href="dashboard.html">Switch to the dashboard view.</a></p>
+  </footer>
+
 </body>
 </html>
