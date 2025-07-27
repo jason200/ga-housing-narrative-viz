@@ -1,72 +1,55 @@
-// main.js
-import { select, scaleTime, scaleLinear, axisBottom, axisLeft, line, extent, csv, timeParse } from 'https://unpkg.com/d3@6?module';
+import * as d3 from "https://unpkg.com/d3@6?module";
+import scrollama from "https://unpkg.com/scrollama?module";
 
-const width = 700, height = 400, margin = { top: 20, right: 20, bottom: 50, left: 60 };
+const width = 800, height = 400, margin = { top: 20, right: 20, bottom: 40, left: 50 };
 
-const svg = select('#graphic')
-  .append('svg')
-    .attr('width', width)
-    .attr('height', height);
+const svg = d3.select("#graphic")
+  .append("svg").attr("width", width).attr("height", height);
 
-const g = svg.append('g')
-    .attr('transform', `translate(${margin.left},${margin.top})`);
+d3.csv("data/home_values.csv", d => ({
+  year: +d.year,
+  median: +d.median
+})).then(data => {
+  // Scales
+  const x = d3.scaleLinear()
+    .domain(d3.extent(data, d => d.year))
+    .range([margin.left, width - margin.right]);
+  const y = d3.scaleLinear()
+    .domain([0, d3.max(data, d => d.median)]).nice()
+    .range([height - margin.bottom, margin.top]);
 
-const innerW = width - margin.left - margin.right;
-const innerH = height - margin.top - margin.bottom;
+  // Line generator
+  const line = d3.line()
+    .x(d => x(d.year))
+    .y(d => y(d.median));
 
-const parseDate = timeParse('%Y-%m-%d');
+  // Draw axes
+  svg.append("g")
+    .attr("transform", `translate(0,${height - margin.bottom})`)
+    .call(d3.axisBottom(x).ticks(5).tickFormat(d3.format("d")));
+  svg.append("g")
+    .attr("transform", `translate(${margin.left},0)`)
+    .call(d3.axisLeft(y).tickFormat(d3.format("$.2s")));
 
-// load & preprocess
-csv('data/home_values.csv').then(rows => {
-  // find the Georgia row
-  const ga = rows.find(r => r.RegionName === 'Georgia');
-  // convert date columns to { date, value }
-  const data = Object.keys(ga)
-    .filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k))
-    .map(k => ({ date: parseDate(k), value: +ga[k] }));
-
-  // scales
-  const x = scaleTime().domain(extent(data, d => d.date)).range([0, innerW]);
-  const y = scaleLinear().domain([0, d3.max(data, d => d.value)]).nice().range([innerH, 0]);
-
-  // axes
-  g.append('g')
-    .attr('transform', `translate(0,${innerH})`)
-    .call(axisBottom(x).ticks(5));
-  g.append('g')
-    .call(axisLeft(y));
-
-  // line generator
-  const lineGen = line()
-    .x(d => x(d.date))
-    .y(d => y(d.value));
-
-  // path
-  g.append('path')
+  // Draw path (initially hidden)
+  svg.append("path")
     .datum(data)
-    .attr('fill', 'none')
-    .attr('stroke', '#333')
-    .attr('stroke-width', 2)
-    .attr('d', lineGen);
+    .attr("class", "line-path")
+    .attr("d", line)
+    .attr("stroke", "#333")
+    .attr("fill", "none")
+    .attr("stroke-width", 2)
+    .attr("opacity", 0);
 
-  // scrollama
+  // Scrollama setup
   const scroller = scrollama();
   scroller
-    .setup({ step: '#narrative section', offset: 0.7 })
+    .setup({ step: "#narrative section" })
     .onStepEnter(({ index }) => {
-      g.selectAll('path').attr('stroke', index === 0 ? '#aaa' : '#333');
       if (index === 0) {
-        // show only the last point
-        const last = data[data.length - 1];
-        g.selectAll('.dot').remove();
-        g.append('circle')
-          .attr('class','dot')
-          .attr('cx', x(last.date))
-          .attr('cy', y(last.value))
-          .attr('r', 5)
-          .attr('fill', 'tomato');
+        svg.select(".line-path").transition().duration(600).attr("opacity", 0);
       } else {
-        g.selectAll('.dot').remove();
+        svg.select(".line-path").transition().duration(600).attr("opacity", 1);
       }
     });
 });
