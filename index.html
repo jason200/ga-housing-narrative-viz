@@ -23,14 +23,15 @@
     .container {
       display: flex;
       gap: 20px;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
       flex-wrap: wrap;
     }
     .chart {
-      flex: 2;            /* Grow larger */
-      min-width: 700px;   /* Never narrower than 700px */
-      max-width: 850px;   /* Cap at 850px */
+      flex: 2;
+      min-width: 900px;   /* never narrower */
+      max-width: 1200px;  /* cap width */
+      height: 600px;      /* increase height */
     }
     .text {
       flex: 1;
@@ -104,10 +105,12 @@
           { "field": "date", "title": "Year" },
           { "field": "value", "title": "Median Value", "format": "$,.0f" }
         ]
-      }
+      },
+      "width": 1000,
+      "height": 600
     };
 
-    vegaEmbed('#chart', spec, { actions: false });
+    vegaEmbed('#chart', spec, { actions: false, renderer: 'svg' });
   });
 </script>
 
