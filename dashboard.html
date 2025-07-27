@@ -1,116 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Dashboard: Georgia Home‑Value Trends &amp; Map</title>
-
-  <!-- include D3 (if you’re embedding charts inline) -->
-  <script src="https://d3js.org/d3.v5.min.js"></script>
-
+  <meta charset="UTF-8" />
+  <title>Georgia County Home‑Value Trends &amp; Map</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
-    body {
-      font-family: sans-serif;
-      margin: 0;
-      padding: 0;
-      display: grid;
-      grid-template-rows: auto 1fr;
-      height: 100vh;
+    body { font-family: sans-serif; margin:2rem; }
+    h1 { margin-bottom:.2rem; }
+    #container {
+      display: flex;
+      gap: 1rem;
     }
-    header {
-      background: #f7f7f7;
-      padding: 1rem;
-      border-bottom: 1px solid #ddd;
-    }
-    h1 { margin: 0; font-size: 1.5rem; }
-
-    main {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-gap: 1rem;
-      padding: 1rem;
-      overflow: auto;
-    }
-
-    .chart-container {
-      background: white;
-      border: 1px solid #ccc;
-      padding: 0.5rem;
-    }
-    .chart-container h2 {
-      margin-top: 0;
-      font-size: 1.2rem;
-    }
-
-    svg {
-      width: 100%;
-      height: auto;
-    }
-
-    footer {
-      grid-column: 1 / -1;
-      background: #f7f7f7;
-      padding: 0.5rem 1rem;
-      text-align: center;
-      border-top: 1px solid #ddd;
-      font-size: 0.8rem;
-    }
+    svg { background: #fafafa; border:1px solid #ccc; }
+    .line { fill: none; stroke-width: 2px; opacity: .7; cursor: pointer; }
+    .line:hover,
+    .line.active { opacity: 1; stroke-width: 3px; }
+    .county { stroke: #333; stroke-width:.5; }
+    .county:hover,
+    .county.active { stroke: #000; stroke-width:1.5; }
+    .legend { font-size:.8rem; }
   </style>
 </head>
 <body>
+  <h1>Georgia County Home‑Value Trends &amp; Map</h1>
+  <p>Hover or click on any county to see details across both charts.</p>
 
-  <header>
-    <h1>Georgia County Home‑Value Trends &amp; Map</h1>
-    <p>Hover or click on any county to see details across both charts.</p>
-  </header>
-
-  <main>
-    <!-- Time‑Series Chart -->
-    <div class="chart-container" id="timeseries">
-      <h2>Median Home‑Value Over Time</h2>
-      <svg id="ts-chart"></svg>
-    </div>
-
-    <!-- Choropleth Map -->
-    <div class="chart-container" id="map">
-      <h2>2025 Q1 Median Home‑Value by County</h2>
-      <svg id="map-chart"></svg>
-    </div>
-  </main>
-
-  <footer>
-    &copy; 2025 Your Name • CS 123 MP5 – Flow Visualization
-  </footer>
+  <div id="container">
+    <svg id="timeseries" width="600" height="400"></svg>
+    <svg id="map"        width="600" height="400"></svg>
+  </div>
 
   <script>
-    // === DATA LOADING & SHARED SCALES ===
-    Promise.all([
-      d3.csv("county_timeseries.csv"),    // columns: county, date, value
-      d3.json("ga_counties.geojson"),     // GeoJSON for Georgia
-      d3.csv("q1_2025_values.csv")        // columns: county, median_value
-    ]).then(([tsData, geo, mapData]) => {
-      // call two functions to draw
-      drawTimeSeries(tsData);
-      drawChoropleth(geo, mapData);
-    });
+  // 1) Data URLs (raw GitHub)
+  const csvUrl = "https://raw.githubusercontent.com/jason200/ga-housing-narrative-viz/main/data/home_values.csv";
+  const geoUrl = "https://raw.githubusercontent.com/jason200/ga-housing-narrative-viz/main/data/counties.geojson";
 
-    // === DRAW TIME SERIES ===
-    function drawTimeSeries(data) {
-      // parse dates, nest by county, set up scales, axes, line generator,
-      // draw lines, add hover + click handlers to highlight map…
-      // (Your existing D3 code goes here)
+  Promise.all([
+    d3.csv(csvUrl, d3.autoType),
+    d3.json(geoUrl)
+  ]).then(([data, geo]) => {
+    // nest by county
+    const counties = d3.group(data, d => d.County);
+    const years = Array.from(new Set(data.map(d => d.Year))).sort();
+
+    // Time series SVG
+    const tsSvg = d3.select("#timeseries");
+    const margin = {top:20, right:30, bottom:40, left:50};
+    const w = +tsSvg.attr("width")  - margin.left - margin.right;
+    const h = +tsSvg.attr("height") - margin.top  - margin.bottom;
+    const gTS = tsSvg.append("g").attr("transform","translate("+margin.left+","+margin.top+")");
+
+    // x/y scales
+    const x = d3.scaleLinear().domain(d3.extent(years)).range([0,w]);
+    const y = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.Value)])
+                .nice().range([h,0]);
+
+    // axes
+    gTS.append("g").attr("transform","translate(0,"+h+")")
+        .call(d3.axisBottom(x).ticks(6).tickFormat(d3.format("d")));
+    gTS.append("g").call(d3.axisLeft(y));
+
+    // line generator
+    const line = d3.line()
+      .x(d => x(d.Year))
+      .y(d => y(d.Value));
+
+    // draw one path per county
+    const path = gTS.selectAll(".line")
+      .data(counties)
+      .join("path")
+        .attr("class","line")
+        .attr("id", ([k]) => "line_"+k.replace(/\s+/g,"_"))
+        .attr("d", ([k,values]) => line(values.sort((a,b)=>a.Year-b.Year)))
+        .attr("stroke", (d,i) => d3.schemeTableau10[i%10]);
+
+    // choropleth
+    const mapSvg = d3.select("#map"),
+          mg = mapSvg.append("g").attr("transform","translate(0,20)"),
+          projection = d3.geoAlbersUsa()
+                         .fitSize([+mapSvg.attr("width"), +mapSvg.attr("height")-20], geo),
+          pathGen = d3.geoPath(projection),
+          latest = d3.rollup(data, v=>v.find(d=>d.Year===2025).Value, d=>d.County);
+
+    const color = d3.scaleSequential()
+      .domain(d3.extent(Array.from(latest.values())))
+      .interpolator(d3.interpolateBlues);
+
+    mg.selectAll("path")
+      .data(geo.features)
+      .join("path")
+        .attr("class","county")
+        .attr("id", d=>"county_"+d.properties.NAME.replace(/\s+/g,"_"))
+        .attr("d", pathGen)
+        .attr("fill", d => color(latest.get(d.properties.NAME)));
+
+    // interaction: hover / click
+    function activate(county){
+      // clear
+      path.classed("active",false);
+      mg.selectAll(".county").classed("active",false);
+      if(county){
+        d3.select("#line_"+county).classed("active",true);
+        d3.select("#county_"+county).classed("active",true);
+      }
     }
 
-    // === DRAW CHOROPLETH ===
-    function drawChoropleth(geo, values) {
-      // join values into GeoJSON, set up color scale, projection,
-      // draw paths, add hover + click handlers to highlight lines…
-      // (Your existing D3 map code goes here)
-    }
+    path.on("mouseover", ([county]) => activate(county.replace(/\s+/g,"_")))
+        .on("mouseout", () => activate(null))
+        .on("click", ([county]) => activate(county.replace(/\s+/g,"_")));
 
-    // Both draw*() functions should attach .on("mouseover",…) and .on("click",…)
-    // so that mousing or clicking in one chart highlights the corresponding feature
-    // in the other chart (details on demand + cross‑filtering).
+    mg.selectAll(".county")
+      .on("mouseover", d => activate(d.properties.NAME.replace(/\s+/g,"_")))
+      .on("mouseout", () => activate(null))
+      .on("click", d => activate(d.properties.NAME.replace(/\s+/g,"_")));
+  })
+  .catch(err => console.error(err));
   </script>
-
 </body>
 </html>
