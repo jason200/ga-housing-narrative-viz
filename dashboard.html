@@ -1,38 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>GA Home‑Value Trends & Map</title>
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <style>
-    /* your CSS here */
-    svg { font: 10px sans-serif; }
-  </style>
+  <meta charset="UTF-8">
+  <title>Georgia Home-Value Dashboard</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Georgia County Home‑Value Trends & Map</h1>
-  <div id="charts">
-    <svg id="ts" width="600" height="400"></svg>
-    <svg id="map" width="600" height="400"></svg>
+  <h1>Georgia Home-Value Dashboard</h1>
+  <p style="text-align:center;">
+    ← <a href="index.html">Back to narrative</a>
+  </p>
+
+  <div class="dash-container">
+    <div id="lineChart"></div>
+    <div id="barChart"></div>
   </div>
 
-  <script>
-    // 1) load both files in parallel
-    Promise.all([
-      d3.csv("data/home_values.csv", d3.autoType),
-      d3.json("data/counties.geojson")
-    ]).then(([homeValues, counties]) => {
-      // --- time‑series chart in #ts ---
-      const tsSvg = d3.select("#ts");
-      // ... your ts drawing code using homeValues ...
-
-      // --- choropleth in #map ---
-      const mapSvg = d3.select("#map");
-      // ... your map drawing code using counties and homeValues ...
-    })
-    .catch(err => {
-      console.error("❌ failed to load data:", err);
-    });
-  </script>
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <script type="module" src="dashboard.js"></script>
 </body>
 </html>
