@@ -1,57 +1,30 @@
 body {
   font-family: sans-serif;
   margin: 0;
-  padding: 0 20px;
-  line-height: 1.5;
+  padding: 1em;
 }
 h1 {
   text-align: center;
-  margin-top: 1em;
 }
-a {
-  color: steelblue;
-  text-decoration: none;
-}
-a:hover {
-  text-decoration: underline;
-}
-
-/* narrative */
 #scrolly {
   display: flex;
-  margin: 2em 0;
 }
 #graphic {
   flex: 1;
-  position: sticky;
-  top: 100px;
-  height: 400px;
 }
-#text {
+#narrative {
   flex: 1;
-  margin-left: 40px;
+  padding-left: 2em;
 }
-.step {
-  margin-bottom: 200px;
+#narrative section {
   opacity: 0.2;
   transition: opacity 0.3s;
-  max-width: 300px;
+  margin-bottom: 4em;
 }
-.step.is-active {
+#narrative section.is-active {
   opacity: 1;
 }
-
-/* dashboard */
-.dash-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
-  gap: 30px;
-  margin-bottom: 40px;
-}
-#barChart,
-#lineChart {
-  width: 45%;
-  min-width: 300px;
+svg {
+  width: 100%;
   height: 400px;
 }
