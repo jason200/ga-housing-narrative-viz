@@ -29,9 +29,9 @@
     }
     .chart {
       flex: 2;
-      min-width: 900px;   /* never narrower */
-      max-width: 1200px;  /* cap width */
-      height: 600px;      /* increase height */
+      min-width: 400px;   /* never narrower than 400px */
+      max-width: 600px;   /* cap at 600px */
+      height: 350px;      /* set chart height */
     }
     .text {
       flex: 1;
@@ -57,62 +57,62 @@
 </head>
 <body>
 
-<h1>Georgia Home‑Value Trends</h1>
+  <h1>Georgia Home‑Value Trends</h1>
 
-<div class="container">
-  <div id="chart" class="chart"></div>
+  <div class="container">
+    <div id="chart" class="chart"></div>
 
-  <div class="text">
-    <h2>What’s happening?</h2>
-    <p>This bar chart shows Georgia’s median home values every 5 years from 2000 to 2025.</p>
+    <div class="text">
+      <h2>What’s happening?</h2>
+      <p>This bar chart shows Georgia’s median home values every 5 years from 2000 to 2025.</p>
 
-    <h2>Key Takeaway</h2>
-    <p>Notice the dip around 2010, then a strong rebound into 2025.</p>
+      <h2>Key Takeaway</h2>
+      <p>Notice the dip around 2010, then a strong rebound into 2025.</p>
+    </div>
   </div>
-</div>
 
-<footer>
-  <a href="dashboard.html">Dashboard view</a> |
-  <a href="narrative.html">Narrative view</a>
-</footer>
+  <footer>
+    <a href="dashboard.html">Dashboard view</a> |
+    <a href="narrative.html">Narrative view</a>
+  </footer>
 
-<script>
-  d3.csv('data/home_values.csv').then(raw => {
-    const row = raw.find(r => r.RegionName === 'Georgia');
-    const entries = Object.entries(row)
-      .filter(([k]) => /^\d{4}-\d{2}-\d{2}$/.test(k))
-      .map(([date,v]) => ({ date, value: +v }))
-      .filter(d =>
-        ['2000-01-31','2005-01-31','2010-01-31','2015-01-31','2020-01-31','2025-01-31']
-        .includes(d.date)
-      );
+  <script>
+    d3.csv('data/home_values.csv').then(raw => {
+      const row = raw.find(r => r.RegionName === 'Georgia');
+      const entries = Object.entries(row)
+        .filter(([k]) => /^\d{4}-\d{2}-\d{2}$/.test(k))
+        .map(([date,v]) => ({ date, value: +v }))
+        .filter(d =>
+          ['2000-01-31','2005-01-31','2010-01-31','2015-01-31','2020-01-31','2025-01-31']
+          .includes(d.date)
+        );
 
-    const spec = {
-      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-      "data": { "values": entries },
-      "mark": "bar",
-      "encoding": {
-        "x": { "field": "date", "type": "ordinal", "title": "Year" },
-        "y": { "field": "value", "type": "quantitative", "title": "Median Home Value ($)" },
-        "color": {
-          "condition": {
-            "test": "datum.date === '2010-01-31'",
-            "value": "#e45756"
+      const spec = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "width": 600,
+        "height": 350,
+        "data": { "values": entries },
+        "mark": "bar",
+        "encoding": {
+          "x": { "field": "date", "type": "ordinal", "title": "Year" },
+          "y": { "field": "value", "type": "quantitative", "title": "Median Home Value ($)" },
+          "color": {
+            "condition": {
+              "test": "datum.date === '2010-01-31'",
+              "value": "#e45756"
+            },
+            "value": "#4682b4"
           },
-          "value": "#4682b4"
-        },
-        "tooltip": [
-          { "field": "date", "title": "Year" },
-          { "field": "value", "title": "Median Value", "format": "$,.0f" }
-        ]
-      },
-      "width": 1000,
-      "height": 600
-    };
+          "tooltip": [
+            { "field": "date", "title": "Year" },
+            { "field": "value", "title": "Median Value", "format": "$,.0f" }
+          ]
+        }
+      };
 
-    vegaEmbed('#chart', spec, { actions: false, renderer: 'svg' });
-  });
-</script>
+      vegaEmbed('#chart', spec, { actions: false, renderer: 'svg' });
+    });
+  </script>
 
 </body>
 </html>
