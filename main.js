@@ -1,125 +1,102 @@
-// margins & SVG setup
-const margin = { top:40, right:20, bottom:40, left:50 };
-const w = 500 - margin.left - margin.right;
-const h = 400 - margin.top - margin.bottom;
+// main.js
+import * as d3 from "https://unpkg.com/d3@6?module";
+import scrollama from "https://unpkg.com/scrollama?module";
 
 const svg = d3.select("#graphic")
   .append("svg")
-    .attr("width",  w + margin.left + margin.right)
-    .attr("height", h + margin.top + margin.bottom)
-  .append("g")
-    .attr("transform", `translate(${margin.left},${margin.top})`);
+  .attr("width", 600)
+  .attr("height", 400);
 
-// load data
-// main.js
-// …at the top of the file…
+const margin = { top: 20, right: 20, bottom: 40, left: 40 },
+      width  = +svg.attr("width")  - margin.left - margin.right,
+      height = +svg.attr("height") - margin.top  - margin.bottom;
 
-d3.csv("data/home_values.csv")
-  .then(rawRows => {
-    console.log("🔍 raw CSV rows:", rawRows);
-    const data = rawRows.map(d => {
-      // try both lowercase and uppercase until you see real numbers in the console
-      const year   = +d.year   || +d.Year;
-      const median = +d.median || +d.Median || +d.Value;
-      return { year, median };
-    });
-    console.log("✅ parsed data:", data);
+const g = svg.append("g")
+  .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // stash for the rest of your scenes
-    window.narrativeData = data;
+Promise.all([
+  d3.csv("data/home_values.csv", d3.autoType)
+])
+.then(([raw]) => {
+  // 1) pick out Georgia
+  const georgia = raw.find(d => d.RegionName === "Georgia" && d.RegionType === "state");
 
-    initScroll();
-    drawScene(1);
-  })
-  .catch(err => {
-    console.error("❌ failed to load CSV:", err);
-  });
+  // 2) get all the monthly date-columns
+  const dateCols = Object.keys(georgia)
+    .filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k));
 
+  // 3) reshape into [{year:2000, median:127946.88}, ...]
+  const allData = dateCols.map(d => ({
+    year: +d.slice(0,4),
+    median: +georgia[d]
+  }))
+  // sort by year
+  .sort((a,b) => a.year - b.year);
 
-function initScroll() {
+  // 4) pick every 5th year (2000,05,...,25)
+  const narrativeData = allData.filter(d => d.year % 5 === 0);
+
+  // set up scales
+  const x = d3.scaleBand()
+      .domain(narrativeData.map(d => d.year))
+      .range([0, width])
+      .padding(0.3);
+
+  const y = d3.scaleLinear()
+      .domain([0, d3.max(narrativeData, d => d.median)]).nice()
+      .range([height, 0]);
+
+  // axes
+  g.append("g").call(d3.axisLeft(y));
+  const xg = g.append("g")
+      .attr("transform", `translate(0,${height})`)
+      .call(d3.axisBottom(x));
+
+  // bars (initially zero height)
+  const bars = g.selectAll("rect").data(narrativeData).join("rect")
+      .attr("x", d => x(d.year))
+      .attr("width", x.bandwidth())
+      .attr("y", height)
+      .attr("height", 0)
+      .attr("fill", "#008080");
+
+  // annotation labels above bars
+  const labels = g.selectAll("text.bar-label")
+    .data(narrativeData).join("text")
+      .attr("class", "bar-label")
+      .attr("text-anchor", "middle")
+      .attr("x", d => x(d.year) + x.bandwidth()/2)
+      .attr("y", height)
+      .text("");
+
+  // scrollama setup
   const scroller = scrollama();
   scroller
-    .setup({ step: ".step", offset: 0.6 })
-    .onStepEnter(resp => {
-      d3.selectAll(".step").classed("is-active", false);
-      d3.select(resp.element).classed("is-active", true);
-      drawScene(+resp.element.getAttribute("data-step"));
+    .setup({
+      step: "#narrative section",
+      offset: 0.5,
+    })
+    .onStepEnter(({ index }) => {
+      d3.selectAll("#narrative section")
+        .classed("is-active", (d,i) => i === index);
+
+      // on step 0: show only first bar
+      // step 1,2: animate in all bars
+      // step 3: no change
+      if (index === 0) {
+        bars.transition().duration(600)
+          .attr("y", (d,i) => i===narrativeData.length-1 ? y(narrativeData[i].median) : height)
+          .attr("height", (d,i) => i===narrativeData.length-1 ? height - y(d.median) : 0);
+        labels.transition().duration(600)
+          .attr("y", (d,i) => i===narrativeData.length-1 ? y(d.median)-5 : height)
+          .text((d,i) => i===narrativeData.length-1 ? "Latest" : "");
+      } else if (index < 3) {
+        bars.transition().duration(600)
+          .attr("y", d => y(d.median))
+          .attr("height", d => height - y(d.median));
+        labels.transition().duration(600)
+          .attr("y", d => y(d.median)-5)
+          .text(d => d.median.toLocaleString());
+      }
     });
-}
-
-function drawScene(step) {
-  if (step === 1) drawBars();
-  else if (step === 2) drawLine();
-  // step 3 just links out
-}
-
-function drawBars() {
-  const data = window.narrativeData.slice(-5);
-  svg.selectAll("*").remove();
-
-  const x = d3.scaleBand()
-    .domain(data.map(d=>d.year))
-    .range([0,w]).padding(0.3);
-
-  const y = d3.scaleLinear()
-    .domain([0, d3.max(data,d=>d.median)*1.1])
-    .range([h,0]);
-
-  svg.append("g").call(d3.axisLeft(y));
-  svg.append("g")
-     .attr("transform",`translate(0,${h})`)
-     .call(d3.axisBottom(x).tickFormat(d3.format("d")));
-
-  svg.selectAll("rect")
-     .data(data)
-     .join("rect")
-       .attr("x", d=>x(d.year))
-       .attr("y", d=>y(d.median))
-       .attr("width", x.bandwidth())
-       .attr("height", d=>h - y(d.median))
-       .attr("fill", "teal");
-
-  const latest = data[data.length-1];
-  svg.append("text")
-     .attr("x", x(latest.year)+x.bandwidth()/2)
-     .attr("y", y(latest.median)-6)
-     .attr("text-anchor","middle")
-     .text("Latest");
-}
-
-function drawLine() {
-  const data = window.narrativeData;
-  svg.selectAll("*").remove();
-
-  const x = d3.scaleLinear()
-    .domain(d3.extent(data,d=>d.year))
-    .range([0,w]);
-
-  const y = d3.scaleLinear()
-    .domain([0, d3.max(data,d=>d.median)*1.1])
-    .range([h,0]);
-
-  svg.append("g").call(d3.axisLeft(y));
-  svg.append("g")
-     .attr("transform",`translate(0,${h})`)
-     .call(d3.axisBottom(x).ticks(data.length).tickFormat(d3.format("d")));
-
-  const line = d3.line()
-    .x(d=>x(d.year))
-    .y(d=>y(d.median));
-
-  svg.append("path")
-     .datum(data)
-     .attr("fill","none")
-     .attr("stroke","orange")
-     .attr("stroke-width",2)
-     .attr("d", line);
-
-  const top = data[data.length-1];
-  svg.append("text")
-     .attr("x", x(top.year))
-     .attr("y", y(top.median)-10)
-     .attr("text-anchor","end")
-     .attr("fill","orange")
-     .text("Peak");
-}
+});
