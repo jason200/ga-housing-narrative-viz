@@ -1,24 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Georgia Home‑Value Dashboard</title>
+
+  <!-- D3 + Vega/Lite -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
-  <script src="https://d3js.org/d3.v7.min.js"></script>
+
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; background: #fafafa; color: #333; }
-    header { text-align: center; margin-bottom: 20px; }
-    nav a { margin: 0 15px; color: #5c2ca4; text-decoration: none; font-weight: bold; }
-    nav a:hover { text-decoration: underline; }
-    h1 { margin-bottom: 10px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-    .box { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    .chart { width: 100%; height: 400px; }
-    .caption { text-align: center; font-weight: bold; margin-top: 10px; }
-    .desc { text-align: center; font-size: 13px; color: #666; margin-top: 5px; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background: #fafafa;
+      color: #333;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    nav a {
+      margin: 0 15px;
+      color: #5c2ca4;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+    .box {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .chart {
+      width: 100%;
+      height: 350px;
+    }
+    .caption {
+      text-align: center;
+      font-weight: bold;
+      margin-top: 10px;
+      color: #333;
+    }
+    .desc {
+      text-align: center;
+      font-size: 13px;
+      color: #666;
+      margin-top: 5px;
+    }
   </style>
 </head>
 <body>
@@ -31,6 +73,7 @@
     </nav>
     <h1>Georgia Home‑Value Dashboard</h1>
   </header>
+
   <div class="grid">
     <div class="box">
       <div id="lineChart" class="chart"></div>
@@ -43,15 +86,71 @@
       <div class="desc">Georgia’s median home values for each month of 2025.</div>
     </div>
   </div>
+
   <script>
+    // Load the CSV, find Georgia row, parse into date/value objects
     d3.csv('data/home_values.csv').then(raw => {
       const row = raw.find(r => r.RegionName === 'Georgia');
-      const allEntries = Object.entries(row).filter(([k]) => /^\d{4}-\d{2}-\d{2}$/.test(k)).map(([date, v]) => ({ date, value: +v }));
-      const lineSpec = { "$schema":"https://vega.github.io/schema/vega-lite/v5.json","width":500,"height":350,"data":{"values":allEntries},"mark":{"type":"line","color":"#4682b4","interpolate":"monotone"},"encoding":{"x":{"field":"date","type":"temporal","title":"Year","axis":{"format":"%Y","tickCount":6}},"y":{"field":"value","type":"quantitative","title":"Median Value ($)"},"tooltip":[{"field":"date","title":"Month","format":"%Y-%m"},{"field":"value","title":"Median Value","format":"$,.0f"}]}};
-      const snapshot = allEntries.filter(d => d.date.startsWith('2025-'));
-      const barSpec = { "$schema":"https://vega.github.io/schema/vega-lite/v5.json","width":300,"height":350,"data":{"values":snapshot},"mark":"bar","encoding":{"x":{"field":"date","type":"ordinal","title":"Month of 2025","axis":{"labelAngle":-45}},"y":{"field":"value","type":"quantitative","title":"Median Value ($)"},"tooltip":[{"field":"date","title":"Month","format":"%Y-%m"},{"field":"value","title":"Median Value","format":"$,.0f"}]}};
-      vegaEmbed('#lineChart', lineSpec, {actions:false});
-      vegaEmbed('#barChart', barSpec, {actions:false});
+      const all = Object.entries(row)
+        .filter(([k]) => /^\d{4}-\d{2}-\d{2}$/.test(k))
+        .map(([date, v]) => ({ date: new Date(date), value: +v }));
+
+      // 1) LINE CHART
+      const lineSpec = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "width": 500,
+        "height": 350,
+        "data": { "values": all },
+        "mark": { "type": "line", "color": "#4682b4", "interpolate": "monotone" },
+        "encoding": {
+          "x": {
+            "field": "date",
+            "type": "temporal",
+            "title": "Year",
+            "axis": { "format": "%Y", "tickCount": 6 }
+          },
+          "y": {
+            "field": "value",
+            "type": "quantitative",
+            "title": "Median Value ($)"
+          },
+          "tooltip": [
+            { "field": "date", "title": "Month", "format": "%Y‑%m" },
+            { "field": "value", "title": "Median Value", "format": "$,.0f" }
+          ]
+        }
+      };
+
+      // 2) BAR CHART (2025 snapshot)
+      const snapshot = all.filter(d => d.date.getFullYear() === 2025);
+      const barSpec = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "width": 300,
+        "height": 350,
+        "data": { "values": snapshot },
+        "mark": "bar",
+        "encoding": {
+          "x": {
+            "field": "date",
+            "type": "ordinal",
+            "title": "Month of 2025",
+            "axis": { "labelAngle": -45 }
+          },
+          "y": {
+            "field": "value",
+            "type": "quantitative",
+            "title": "Median Value ($)"
+          },
+          "tooltip": [
+            { "field": "date", "title": "Month", "format": "%Y‑%m" },
+            { "field": "value", "title": "Median Value", "format": "$,.0f" }
+          ]
+        }
+      };
+
+      // Render them
+      vegaEmbed('#lineChart', lineSpec,  { actions: false });
+      vegaEmbed('#barChart',  barSpec,   { actions: false });
     });
   </script>
 </body>
