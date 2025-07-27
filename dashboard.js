@@ -80,19 +80,3 @@ d3.csv("data/home_values.csv").then(raw => {
     .attr("transform",`translate(${M.left},0)`)
     .call(d3.axisLeft(y2));
 });
-
-// inside your <script> in dashboard.html
-d3.json("data/counties.geojson").then(function(geoData) {
-  // bind it to your map projection
-  svgMap.append("g")
-        .selectAll("path")
-        .data(geoData.features)
-        .enter().append("path")
-          .attr("d", d3.geoPath().projection(projection))
-          .attr("fill", d => colorScale(valueByCounty[d.properties.NAME]))
-          .attr("stroke", "#333")
-          .on("mouseover", highlightCounty)
-          .on("mouseout", resetHighlight)
-          .on("click", filterByCounty);
-});
-
