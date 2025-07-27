@@ -3,45 +3,89 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Georgia Home-Value Trends</title>
+  <title>Georgia Home‑Value Trends</title>
+
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; background: #fafafa; }
-    h1 { text-align: center; margin-bottom: 30px; }
-    .container { display: flex; gap: 20px; align-items: center; justify-content: center; flex-wrap: wrap; }
-    .chart { flex: 1; min-width: 500px; max-width: 600px; }
-    .text { flex: 1; max-width: 450px; }
-    .text h2 { margin-top: 20px; color: #333; }
-    footer { text-align: center; margin-top: 40px; }
-    a { color: #5c2ca4; font-weight: bold; text-decoration: none; }
-    a:hover { text-decoration: underline; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background: #fafafa;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .chart {
+      flex: 2;            /* Grow larger */
+      min-width: 700px;   /* Never narrower than 700px */
+      max-width: 850px;   /* Cap at 850px */
+    }
+    .text {
+      flex: 1;
+      max-width: 450px;
+    }
+    .text h2 {
+      margin-top: 20px;
+      color: #333;
+    }
+    footer {
+      text-align: center;
+      margin-top: 40px;
+    }
+    a {
+      color: #5c2ca4;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
-<h1>Georgia Home-Value Trends</h1>
+
+<h1>Georgia Home‑Value Trends</h1>
+
 <div class="container">
   <div id="chart" class="chart"></div>
+
   <div class="text">
     <h2>What’s happening?</h2>
     <p>This bar chart shows Georgia’s median home values every 5 years from 2000 to 2025.</p>
+
     <h2>Key Takeaway</h2>
     <p>Notice the dip around 2010, then a strong rebound into 2025.</p>
   </div>
 </div>
+
 <footer>
   <a href="dashboard.html">Dashboard view</a> |
   <a href="narrative.html">Narrative view</a>
 </footer>
+
 <script>
   d3.csv('data/home_values.csv').then(raw => {
     const row = raw.find(r => r.RegionName === 'Georgia');
     const entries = Object.entries(row)
       .filter(([k]) => /^\d{4}-\d{2}-\d{2}$/.test(k))
       .map(([date,v]) => ({ date, value: +v }))
-      .filter(d => ['2000-01-31','2005-01-31','2010-01-31','2015-01-31','2020-01-31','2025-01-31'].includes(d.date));
+      .filter(d =>
+        ['2000-01-31','2005-01-31','2010-01-31','2015-01-31','2020-01-31','2025-01-31']
+        .includes(d.date)
+      );
+
     const spec = {
       "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
       "data": { "values": entries },
@@ -49,15 +93,23 @@
       "encoding": {
         "x": { "field": "date", "type": "ordinal", "title": "Year" },
         "y": { "field": "value", "type": "quantitative", "title": "Median Home Value ($)" },
-        "color": { "condition": { "test": "datum.date === '2010-01-31'", "value": "#e45756" }, "value": "#4682b4" },
+        "color": {
+          "condition": {
+            "test": "datum.date === '2010-01-31'",
+            "value": "#e45756"
+          },
+          "value": "#4682b4"
+        },
         "tooltip": [
           { "field": "date", "title": "Year" },
           { "field": "value", "title": "Median Value", "format": "$,.0f" }
         ]
       }
     };
+
     vegaEmbed('#chart', spec, { actions: false });
   });
 </script>
+
 </body>
 </html>
