@@ -7,25 +7,17 @@
 </head>
 <body>
   <h1>Georgia Home-Value Trends</h1>
-
   <div id="scrolly">
     <div id="graphic"></div>
-    <div id="text">
-      <div class="step" data-step="1">
-        <p>Here’s how median home values have changed over the last 25 years.</p>
-      </div>
-      <div class="step" data-step="2">
-        <p>Notice the sharp dip around 2008, then a steady rebound.</p>
-      </div>
-      <div class="step" data-step="3">
-        <p>Want more detail?  
-           <a href="dashboard.html">Switch to the dashboard view.</a>
-        </p>
-      </div>
+    <div id="narrative">
+      <section data-step="0"><h2>Latest</h2></section>
+      <section data-step="1"><h2>Here's how median home values have changed over the last 25 years.</h2></section>
+      <section data-step="2"><h2>Notice the sharp dip around 2008, then a steady rebound.</h2></section>
+      <section data-step="3"><h2>Want more detail? <a href="dashboard.html">Switch to the dashboard view</a>.</h2></section>
     </div>
   </div>
 
-  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <script src="https://unpkg.com/d3@6"></script>
   <script src="https://unpkg.com/scrollama"></script>
   <script src="main.js"></script>
 </body>
