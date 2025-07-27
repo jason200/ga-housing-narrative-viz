@@ -2,98 +2,83 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Georgia Home-Value Dashboard</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Georgia Home‑Value Dashboard</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; background: #fafafa; line-height: 1.6; }
-    h1 { text-align: center; margin-bottom: 10px; }
-    a { color: #5c2ca4; text-decoration: none; font-weight: bold; }
-    a:hover { text-decoration: underline; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px; }
-    .chart-box { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    .caption { text-align: center; margin-top: 10px; font-size: 15px; color: #333; font-weight: bold; }
+    body { font-family: Arial, sans-serif; margin:40px; background:#fafafa; }
+    h1 { text-align:center; margin-bottom:10px; }
+    .nav { text-align:center; margin-bottom:30px; }
+    .nav a { margin:0 10px; color:#5c2ca4; text-decoration:none; font-weight:bold; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:30px; }
+    .box { background:#fff; padding:20px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    .caption { text-align:center; font-weight:bold; margin-top:10px; color:#333; }
+    .desc { text-align:center; font-size:13px; color:#666; margin-top:5px; }
   </style>
 </head>
 <body>
 
-<h1>Georgia Home-Value Dashboard</h1>
-<p style="text-align:center;"><a href="index.html">← Back to overview</a> | <a href="narrative.html">Narrative</a></p>
+<h1>Georgia Home‑Value Dashboard</h1>
+<div class="nav">
+  <a href="index.html">← Overview</a>
+  <a href="narrative.html">Narrative</a>
+</div>
 
 <div class="grid">
-  <div class="chart-box">
+  <div class="box">
     <div id="lineChart"></div>
     <div class="caption">📈 Monthly Median Home Values (2000–2025)</div>
-    <p style="text-align:center; font-size: 13px; color:#666;">This chart tracks Georgia’s month-to-month housing price trends across 25 years, revealing the 2008–2010 dip and the long rebound.</p>
+    <div class="desc">Full month‑by‑month trend showing the 2008–2010 dip and subsequent rebound.</div>
   </div>
-
-  <div class="chart-box">
+  <div class="box">
     <div id="barChart"></div>
     <div class="caption">🏡 2025 Median Home Value Snapshot</div>
-    <p style="text-align:center; font-size: 13px; color:#666;">The bar chart highlights Georgia’s median home value in 2025 as the latest snapshot.</p>
+    <div class="desc">Georgia’s median home value as of January 2025.</div>
   </div>
 </div>
 
 <script>
+d3.csv('data/home_values.csv').then(raw => {
+  const row = raw.find(r => r.RegionName === 'Georgia');
+  const all = Object.entries(row)
+    .filter(([k]) => /^\d{4}-\d{2}-\d{2}$/.test(k))
+    .map(([date,v]) => ({ date: new Date(date), value: +v }));
+
   const lineSpec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-    "data": { "url": "data/home_values.csv" },
-    "transform": [
-      {"filter": "datum.RegionName == 'Georgia'"},
-      {"fold": [
-        "2000-01-31","2000-02-29","2000-03-31","2000-04-30","2000-05-31","2000-06-30","2000-07-31","2000-08-31","2000-09-30","2000-10-31","2000-11-30","2000-12-31",
-        "2001-01-31","2001-02-28","2001-03-31","2001-04-30","2001-05-31","2001-06-30","2001-07-31","2001-08-31","2001-09-30","2001-10-31","2001-11-30","2001-12-31",
-        "2002-01-31","2002-02-28","2002-03-31","2002-04-30","2002-05-31","2002-06-30","2002-07-31","2002-08-31","2002-09-30","2002-10-31","2002-11-30","2002-12-31",
-        "2003-01-31","2003-02-28","2003-03-31","2003-04-30","2003-05-31","2003-06-30","2003-07-31","2003-08-31","2003-09-30","2003-10-31","2003-11-30","2003-12-31",
-        "2004-01-31","2004-02-29","2004-03-31","2004-04-30","2004-05-31","2004-06-30","2004-07-31","2004-08-31","2004-09-30","2004-10-31","2004-11-30","2004-12-31",
-        "2005-01-31","2005-02-28","2005-03-31","2005-04-30","2005-05-31","2005-06-30","2005-07-31","2005-08-31","2005-09-30","2005-10-31","2005-11-30","2005-12-31",
-        "2006-01-31","2006-02-28","2006-03-31","2006-04-30","2006-05-31","2006-06-30","2006-07-31","2006-08-31","2006-09-30","2006-10-31","2006-11-30","2006-12-31",
-        "2007-01-31","2007-02-28","2007-03-31","2007-04-30","2007-05-31","2007-06-30","2007-07-31","2007-08-31","2007-09-30","2007-10-31","2007-11-30","2007-12-31",
-        "2008-01-31","2008-02-29","2008-03-31","2008-04-30","2008-05-31","2008-06-30","2008-07-31","2008-08-31","2008-09-30","2008-10-31","2008-11-30","2008-12-31",
-        "2009-01-31","2009-02-28","2009-03-31","2009-04-30","2009-05-31","2009-06-30","2009-07-31","2009-08-31","2009-09-30","2009-10-31","2009-11-30","2009-12-31",
-        "2010-01-31","2010-02-28","2010-03-31","2010-04-30","2010-05-31","2010-06-30","2010-07-31","2010-08-31","2010-09-30","2010-10-31","2010-11-30","2010-12-31",
-        "2011-01-31","2011-02-28","2011-03-31","2011-04-30","2011-05-31","2011-06-30","2011-07-31","2011-08-31","2011-09-30","2011-10-31","2011-11-30","2011-12-31",
-        "2012-01-31","2012-02-29","2012-03-31","2012-04-30","2012-05-31","2012-06-30","2012-07-31","2012-08-31","2012-09-30","2012-10-31","2012-11-30","2012-12-31",
-        "2013-01-31","2013-02-28","2013-03-31","2013-04-30","2013-05-31","2013-06-30","2013-07-31","2013-08-31","2013-09-30","2013-10-31","2013-11-30","2013-12-31",
-        "2014-01-31","2014-02-28","2014-03-31","2014-04-30","2014-05-31","2014-06-30","2014-07-31","2014-08-31","2014-09-30","2014-10-31","2014-11-30","2014-12-31",
-        "2015-01-31","2015-02-28","2015-03-31","2015-04-30","2015-05-31","2015-06-30","2015-07-31","2015-08-31","2015-09-30","2015-10-31","2015-11-30","2015-12-31",
-        "2016-01-31","2016-02-29","2016-03-31","2016-04-30","2016-05-31","2016-06-30","2016-07-31","2016-08-31","2016-09-30","2016-10-31","2016-11-30","2016-12-31",
-        "2017-01-31","2017-02-28","2017-03-31","2017-04-30","2017-05-31","2017-06-30","2017-07-31","2017-08-31","2017-09-30","2017-10-31","2017-11-30","2017-12-31",
-        "2018-01-31","2018-02-28","2018-03-31","2018-04-30","2018-05-31","2018-06-30","2018-07-31","2018-08-31","2018-09-30","2018-10-31","2018-11-30","2018-12-31",
-        "2019-01-31","2019-02-28","2019-03-31","2019-04-30","2019-05-31","2019-06-30","2019-07-31","2019-08-31","2019-09-30","2019-10-31","2019-11-30","2019-12-31",
-        "2020-01-31","2020-02-29","2020-03-31","2020-04-30","2020-05-31","2020-06-30","2020-07-31","2020-08-31","2020-09-30","2020-10-31","2020-11-30","2020-12-31",
-        "2021-01-31","2021-02-28","2021-03-31","2021-04-30","2021-05-31","2021-06-30","2021-07-31","2021-08-31","2021-09-30","2021-10-31","2021-11-30","2021-12-31",
-        "2022-01-31","2022-02-28","2022-03-31","2022-04-30","2022-05-31","2022-06-30","2022-07-31","2022-08-31","2022-09-30","2022-10-31","2022-11-30","2022-12-31",
-        "2023-01-31","2023-02-28","2023-03-31","2023-04-30","2023-05-31","2023-06-30","2023-07-31","2023-08-31","2023-09-30","2023-10-31","2023-11-30","2023-12-31",
-        "2024-01-31","2024-02-29","2024-03-31","2024-04-30","2024-05-31","2024-06-30","2024-07-31","2024-08-31","2024-09-30","2024-10-31","2024-11-30","2024-12-31",
-        "2025-01-31","2025-02-28","2025-03-31","2025-04-30","2025-05-31","2025-06-30"
-      ], "as": ["date","value"]},
-      {"calculate": "toDate(datum.date)", "as": "parsedDate"}
-    ],
-    "mark": {"type": "line", "color": "#4682b4"},
+    "data": { "values": all },
+    "mark": "line",
     "encoding": {
-      "x": {"field": "parsedDate", "type": "temporal", "title": "Year"},
-      "y": {"field": "value", "type": "quantitative", "title": "Median Value ($)"},
-      "tooltip": [{"field": "date", "title": "Month"}, {"field": "value", "title": "Median Value", "format": "$,.0f"}]
+      "x": { "field": "date", "type": "temporal", "title": "Year" },
+      "y": { "field": "value", "type": "quantitative", "title": "Median Value ($)" },
+      "tooltip": [
+        { "field": "date", "title": "Month", "format": "%Y‑%m" },
+        { "field": "value", "title": "Median Value", "format": "$,.0f" }
+      ]
     }
   };
 
+  const snapshot = all.filter(d => d.date.getFullYear() === 2025);
   const barSpec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-    "data": { "url": "data/home_values.csv" },
-    "transform": [{"filter": "datum.RegionName == 'Georgia'"},{"fold": ["2025-01-31"], "as": ["year","value"]}],
-    "mark": {"type": "bar", "color": "seagreen"},
+    "data": { "values": snapshot },
+    "mark": "bar",
     "encoding": {
-      "x": {"field": "year", "type": "ordinal", "title": "2025"},
-      "y": {"field": "value", "type": "quantitative", "title": "Median Value ($)"},
-      "tooltip": [{"field": "value", "title": "Median Value", "format": "$,.0f"}]
+      "x": { "field": "date", "type": "ordinal", "title": "Month" },
+      "y": { "field": "value", "type": "quantitative", "title": "Median Value ($)" },
+      "tooltip": [
+        { "field": "date", "title": "Month", "format": "%Y‑%m" },
+        { "field": "value", "title": "Median Value", "format": "$,.0f" }
+      ]
     }
   };
 
-  vegaEmbed("#lineChart", lineSpec).catch(console.error);
-  vegaEmbed("#barChart", barSpec).catch(console.error);
+  vegaEmbed('#lineChart', lineSpec, { actions: false });
+  vegaEmbed('#barChart', barSpec, { actions: false });
+});
 </script>
 
 </body>
