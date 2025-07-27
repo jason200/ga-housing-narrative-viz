@@ -2,64 +2,115 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Georgia Home-Value Dashboard</title>
+  <title>Dashboard: Georgia Home‑Value Trends &amp; Map</title>
+
+  <!-- include D3 (if you’re embedding charts inline) -->
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+
   <style>
     body {
-      font-family: Arial, sans-serif;
-      margin: 40px;
-      background-color: #fafafa;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      height: 100vh;
     }
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
+    header {
+      background: #f7f7f7;
+      padding: 1rem;
+      border-bottom: 1px solid #ddd;
     }
-    a {
-      color: #5c2ca4;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-    .grid {
+    h1 { margin: 0; font-size: 1.5rem; }
+
+    main {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 30px;
-      margin-top: 20px;
+      grid-gap: 1rem;
+      padding: 1rem;
+      overflow: auto;
     }
-    .chart-box {
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+
+    .chart-container {
+      background: white;
+      border: 1px solid #ccc;
+      padding: 0.5rem;
     }
-    .caption {
+    .chart-container h2 {
+      margin-top: 0;
+      font-size: 1.2rem;
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+    }
+
+    footer {
+      grid-column: 1 / -1;
+      background: #f7f7f7;
+      padding: 0.5rem 1rem;
       text-align: center;
-      margin-top: 10px;
-      font-size: 14px;
-      color: #555;
+      border-top: 1px solid #ddd;
+      font-size: 0.8rem;
     }
   </style>
 </head>
 <body>
 
-  <h1>Georgia Home-Value Dashboard</h1>
-  <p style="text-align:center;"><a href="index.html">← Back to narrative</a></p>
+  <header>
+    <h1>Georgia County Home‑Value Trends &amp; Map</h1>
+    <p>Hover or click on any county to see details across both charts.</p>
+  </header>
 
-  <div class="grid">
-    <div class="chart-box">
-      <!-- Line Chart -->
-      <div id="line-chart"></div>
-      <div class="caption">📈 Home Value Trends (2000–2025)</div>
+  <main>
+    <!-- Time‑Series Chart -->
+    <div class="chart-container" id="timeseries">
+      <h2>Median Home‑Value Over Time</h2>
+      <svg id="ts-chart"></svg>
     </div>
 
-    <div class="chart-box">
-      <!-- Bar Chart -->
-      <div id="bar-chart"></div>
-      <div class="caption">🏡 Latest Year’s Median Value</div>
+    <!-- Choropleth Map -->
+    <div class="chart-container" id="map">
+      <h2>2025 Q1 Median Home‑Value by County</h2>
+      <svg id="map-chart"></svg>
     </div>
-  </div>
+  </main>
+
+  <footer>
+    &copy; 2025 Your Name • CS 123 MP5 – Flow Visualization
+  </footer>
+
+  <script>
+    // === DATA LOADING & SHARED SCALES ===
+    Promise.all([
+      d3.csv("county_timeseries.csv"),    // columns: county, date, value
+      d3.json("ga_counties.geojson"),     // GeoJSON for Georgia
+      d3.csv("q1_2025_values.csv")        // columns: county, median_value
+    ]).then(([tsData, geo, mapData]) => {
+      // call two functions to draw
+      drawTimeSeries(tsData);
+      drawChoropleth(geo, mapData);
+    });
+
+    // === DRAW TIME SERIES ===
+    function drawTimeSeries(data) {
+      // parse dates, nest by county, set up scales, axes, line generator,
+      // draw lines, add hover + click handlers to highlight map…
+      // (Your existing D3 code goes here)
+    }
+
+    // === DRAW CHOROPLETH ===
+    function drawChoropleth(geo, values) {
+      // join values into GeoJSON, set up color scale, projection,
+      // draw paths, add hover + click handlers to highlight lines…
+      // (Your existing D3 map code goes here)
+    }
+
+    // Both draw*() functions should attach .on("mouseover",…) and .on("click",…)
+    // so that mousing or clicking in one chart highlights the corresponding feature
+    // in the other chart (details on demand + cross‑filtering).
+  </script>
 
 </body>
 </html>
