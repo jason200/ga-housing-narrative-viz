@@ -1,29 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Georgia County Home‐Value Trends &amp; Map</title>
-  <style>
-    body { font-family: sans-serif; margin: 2rem; }
-    h1 { margin-bottom: .5rem; }
-    p { line-height: 1.5; }
-  </style>
+  <meta charset="UTF-8">
+  <title>Georgia Home-Value Trends</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Georgia County Home‑Value Trends &amp; Map</h1>
-  <p>
-    This dashboard shows long‑term median home‑value trends (2000–2025)
-    for selected Georgia counties alongside a choropleth of their most
-    recent home values by county.
-  </p>
+  <h1>Georgia Home-Value Trends</h1>
 
-  <p>
-    <strong>Ready?</strong>
-    <a href="dashboard.html">Open the dashboard &rarr;</a>
-  </p>
+  <div id="scrolly">
+    <div id="graphic"></div>
+    <div id="narrative">
+      <section data-step="0"><h2>Latest (every 5 years)</h2></section>
+      <section data-step="1"><h2>Full 25-year trend</h2></section>
+      <section data-step="2"><h2>Notice the sharp dip around 2008</h2></section>
+      <section data-step="3">
+        <h2>
+          Want more interactivity?  
+          <a href="dashboard.html">Switch to the dashboard view.</a>
+        </h2>
+      </section>
+    </div>
+  </div>
 
-  <footer style="margin-top:4rem; font-size:.9em; color:#666;">
-    &copy; 2025 Your Name &bull; CS 123 Flow Viz Assignment MP5
-  </footer>
+  <!-- D3 + Scrollama -->
+  <script src="https://unpkg.com/d3@6"></script>
+  <script src="https://unpkg.com/scrollama"></script>
+  <script type="module" src="main.js"></script>
 </body>
 </html>
