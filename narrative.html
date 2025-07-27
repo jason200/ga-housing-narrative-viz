@@ -2,117 +2,50 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Georgia Housing Story</title>
-
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
-
   <style>
-    body {
-      font-family: Georgia, serif;
-      margin: 50px auto;
-      max-width: 900px;
-      line-height: 1.8;
-      background: #fff;
-      color: #333;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-      font-size: 2em;
-    }
-    .nav {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    .nav a {
-      margin: 0 10px;
-      color: #5c2ca4;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    .nav a:hover {
-      text-decoration: underline;
-    }
-    #narrativeChart {
-      width: 800px;
-      height: 450px;
-      margin: 0 auto 20px auto;
-    }
-    .caption {
-      text-align: center;
-      font-style: italic;
-      color: #666;
-      margin-bottom: 40px;
-    }
-    h2 {
-      margin-top: 30px;
-      color: #444;
-    }
+    body { font-family: Georgia, serif; margin:50px auto; max-width:900px; line-height:1.8; background:#fff; color:#333; }
+    header { text-align: center; margin-bottom: 20px; }
+    nav a { margin: 0 15px; color: #5c2ca4; text-decoration: none; font-weight: bold; }
+    nav a:hover { text-decoration: underline; }
+    h1 { margin-bottom: 20px; font-size:2em; }
+    #narrativeChart { width:800px; height:450px; margin:0 auto 20px auto; }
+    .caption { text-align:center; font-style:italic; color:#666; margin-bottom:40px; }
+    h2 { margin-top:30px; color:#444; }
   </style>
 </head>
 <body>
-
-<h1>Georgia Housing Story</h1>
-
-<p class="nav">
-  <a href="index.html">Back to charts</a> |
-  <a href="dashboard.html">Dashboard view</a>
-</p>
-
-<div id="narrativeChart"></div>
-<div class="caption">
-  Median home values every 5 years, highlighting the 2010 market low.
-</div>
-
-<p>Over the past 25 years, Georgia’s housing market has seen both turbulence and remarkable growth. Beginning in 2000, home values were relatively modest, reflecting a steady, predictable climb. But the landscape shifted dramatically with the 2008 financial crisis, which led to a dip in prices that bottomed around 2010.</p>
-
-<h2>The Dip & Recovery</h2>
-<p>The post-2008 crash pushed Georgia’s median home value downward. However, starting in the mid-2010s, the market stabilized and began climbing again, driven by job growth, migration, and economic recovery. By 2020, values were surging, and by 2025, the median home price had climbed to historic highs.</p>
-
-<h2>Looking Forward</h2>
-<p>This narrative highlights the resilience of Georgia’s housing market. Despite downturns, long-term trends show significant appreciation. This story is critical for homebuyers, policymakers, and investors seeking to understand the market’s trajectory.</p>
-
-<script>
-  d3.csv('data/home_values.csv').then(raw => {
-    const row = raw.find(r => r.RegionName === 'Georgia');
-    const entries = Object.entries(row)
-      .filter(([k]) => /^\d{4}-\d{2}-\d{2}$/.test(k))
-      .map(([date,v]) => ({ date, value: +v }))
-      .filter(d =>
-        ['2000-01-31','2005-01-31','2010-01-31','2015-01-31','2020-01-31','2025-01-31']
-        .includes(d.date)
-      );
-
-    const spec = {
-      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-      "width": 800,
-      "height": 450,
-      "data": { "values": entries },
-      "mark": "bar",
-      "encoding": {
-        "x": { "field": "date", "type": "ordinal", "title": "Year" },
-        "y": { "field": "value", "type": "quantitative", "title": "Median Value ($)" },
-        "color": {
-          "condition": {
-            "test": "datum.date === '2010-01-31'",
-            "value": "#e45756"
-          },
-          "value": "#4682b4"
-        },
-        "tooltip": [
-          { "field": "date", "title": "Year" },
-          { "field": "value", "title": "Median Value", "format": "$,.0f" }
-        ]
-      }
-    };
-
-    vegaEmbed('#narrativeChart', spec, { actions: false });
-  });
-</script>
-
+  <header>
+    <nav>
+      <a href="index.html">Overview</a> |
+      <a href="dashboard.html">Dashboard</a> |
+      <a href="narrative.html">Narrative</a> |
+      <a href="map.html">Map</a>
+    </nav>
+    <h1>Georgia Housing Story</h1>
+  </header>
+  <div id="narrativeChart"></div>
+  <div class="caption">Median home values every 5 years, highlighting the 2010 market low.</div>
+  <p>Over the past 25 years, Georgia’s housing market has seen both turbulence and remarkable growth. Beginning in 2000, home values were relatively modest, reflecting a steady, predictable climb. But the landscape shifted dramatically with the 2008 financial crisis, which led to a dip in prices that bottomed around 2010.</p>
+  <h2>The Dip & Recovery</h2>
+  <p>The post-2008 crash pushed Georgia’s median home value downward. However, starting in the mid-2010s, the market stabilized and began climbing again, driven by job growth, migration, and economic recovery. By 2020, values were surging, and by 2025, the median home price had climbed to historic highs.</p>
+  <h2>Looking Forward</h2>
+  <p>This narrative highlights the resilience of Georgia’s housing market. Despite downturns, long-term trends show significant appreciation. This story is critical for homebuyers, policymakers, and investors seeking to understand the market’s trajectory.</p>
+  <script>
+    d3.csv('data/home_values.csv').then(raw => {
+      const row = raw.find(r => r.RegionName === 'Georgia');
+      const entries = Object.entries(row)
+        .filter(([k]) => /^\d{4}-\d{2}-\d{2}$/.test(k))
+        .map(([date,v]) => ({ date, value: +v }))
+        .filter(d => ['2000-01-31','2005-01-31','2010-01-31','2015-01-31','2020-01-31','2025-01-31'].includes(d.date));
+      const spec = { "$schema":"https://vega.github.io/schema/vega-lite/v5.json","width":800,"height":450,"data":{"values":entries},"mark":"bar","encoding":{"x":{"field":"date","type":"ordinal","title":"Year"},"y":{"field":"value","type":"quantitative","title":"Median Value ($)"},"color":{"condition":{"test":"datum.date === '2010-01-31'","value":"#e45756"},"value":"#4682b4"},"tooltip":[{"field":"date","title":"Year"},{"field":"value","title":"Median Value","format":"$,.0f"}]}};
+      vegaEmbed('#narrativeChart', spec, {actions:false});
+    });
+  </script>
 </body>
 </html>
