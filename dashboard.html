@@ -5,62 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Georgia Home‑Value Dashboard</title>
 
-  <!-- D3 + Vega/Lite -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 40px;
-      background: #fafafa;
-      color: #333;
-    }
-    header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    nav a {
-      margin: 0 15px;
-      color: #5c2ca4;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    nav a:hover {
-      text-decoration: underline;
-    }
-    h1 {
-      margin-bottom: 20px;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 30px;
-    }
-    .box {
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    .chart {
-      width: 100%;
-      height: 350px;
-    }
-    .caption {
-      text-align: center;
-      font-weight: bold;
-      margin-top: 10px;
-      color: #333;
-    }
-    .desc {
-      text-align: center;
-      font-size: 13px;
-      color: #666;
-      margin-top: 5px;
-    }
+    body { font-family: Arial, sans-serif; margin: 40px; background: #fafafa; color: #333; }
+    header { text-align: center; margin-bottom: 20px; }
+    nav a { margin: 0 15px; color: #5c2ca4; text-decoration: none; font-weight: bold; }
+    nav a:hover { text-decoration: underline; }
+    h1 { margin-bottom: 20px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+    .box { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .chart { width: 100%; height: 350px; }
+    .caption { text-align: center; font-weight: bold; margin-top: 10px; }
+    .desc { text-align: center; font-size: 13px; color: #666; margin-top: 5px; }
   </style>
 </head>
 <body>
@@ -88,24 +48,17 @@
   </div>
 
   <script>
-    // Use absolute URL to guarantee the file is found
     const CSV_URL = 'https://jason200.github.io/ga-housing-narrative-viz/data/home_values.csv';
 
     d3.csv(CSV_URL).then(raw => {
-      // Make sure we actually loaded rows:
       console.log('Loaded rows:', raw.length);
-
       const row = raw.find(r => r.RegionName === 'Georgia');
-      if (!row) {
-        console.error('Georgia row not found in CSV');
-        return;
-      }
+      console.log('Georgia row:', row);
 
       const all = Object.entries(row)
         .filter(([k]) => /^\d{4}-\d{2}-\d{2}$/.test(k))
         .map(([date, v]) => ({ date: new Date(date), value: +v }));
 
-      // --- LINE CHART
       const lineSpec = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         "width": 500,
@@ -114,24 +67,19 @@
         "mark": { "type": "line", "color": "#4682b4", "interpolate": "monotone" },
         "encoding": {
           "x": {
-            "field": "date",
-            "type": "temporal",
-            "title": "Year",
+            "field": "date", "type": "temporal", "title": "Year",
             "axis": { "format": "%Y", "tickCount": 6 }
           },
           "y": {
-            "field": "value",
-            "type": "quantitative",
-            "title": "Median Value ($)"
+            "field": "value", "type": "quantitative", "title": "Median Value ($)"
           },
           "tooltip": [
-            { "field": "date", "title": "Month", "format": "%Y‑%m" },
+            { "field": "date", "title": "Month", "format": "%Y-%m" },
             { "field": "value", "title": "Median Value", "format": "$,.0f" }
           ]
         }
       };
 
-      // --- BAR CHART (2025 only)
       const snapshot = all.filter(d => d.date.getFullYear() === 2025);
       console.log('2025 snapshot:', snapshot);
 
@@ -143,18 +91,14 @@
         "mark": "bar",
         "encoding": {
           "x": {
-            "field": "date",
-            "type": "ordinal",
-            "title": "Month of 2025",
+            "field": "date", "type": "ordinal", "title": "Month of 2025",
             "axis": { "labelAngle": -45 }
           },
           "y": {
-            "field": "value",
-            "type": "quantitative",
-            "title": "Median Value ($)"
+            "field": "value", "type": "quantitative", "title": "Median Value ($)"
           },
           "tooltip": [
-            { "field": "date", "title": "Month", "format": "%Y‑%m" },
+            { "field": "date", "title": "Month", "format": "%Y-%m" },
             { "field": "value", "title": "Median Value", "format": "$,.0f" }
           ]
         }
@@ -162,10 +106,10 @@
 
       vegaEmbed('#lineChart', lineSpec, { actions: false })
         .catch(err => console.error('Line chart error:', err));
-      vegaEmbed('#barChart',  barSpec,  { actions: false })
+      vegaEmbed('#barChart', barSpec, { actions: false })
         .catch(err => console.error('Bar chart error:', err));
     })
-    .catch(err => console.error('Failed to load CSV:', err));
+    .catch(err => console.error('CSV load error:', err));
   </script>
 </body>
 </html>
