@@ -88,14 +88,24 @@
   </div>
 
   <script>
-    // Load the CSV, find Georgia row, parse into date/value objects
-    d3.csv('data/home_values.csv').then(raw => {
+    // Use absolute URL to guarantee the file is found
+    const CSV_URL = 'https://jason200.github.io/ga-housing-narrative-viz/data/home_values.csv';
+
+    d3.csv(CSV_URL).then(raw => {
+      // Make sure we actually loaded rows:
+      console.log('Loaded rows:', raw.length);
+
       const row = raw.find(r => r.RegionName === 'Georgia');
+      if (!row) {
+        console.error('Georgia row not found in CSV');
+        return;
+      }
+
       const all = Object.entries(row)
         .filter(([k]) => /^\d{4}-\d{2}-\d{2}$/.test(k))
         .map(([date, v]) => ({ date: new Date(date), value: +v }));
 
-      // 1) LINE CHART
+      // --- LINE CHART
       const lineSpec = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         "width": 500,
@@ -121,8 +131,10 @@
         }
       };
 
-      // 2) BAR CHART (2025 snapshot)
+      // --- BAR CHART (2025 only)
       const snapshot = all.filter(d => d.date.getFullYear() === 2025);
+      console.log('2025 snapshot:', snapshot);
+
       const barSpec = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         "width": 300,
@@ -148,10 +160,12 @@
         }
       };
 
-      // Render them
-      vegaEmbed('#lineChart', lineSpec,  { actions: false });
-      vegaEmbed('#barChart',  barSpec,   { actions: false });
-    });
+      vegaEmbed('#lineChart', lineSpec, { actions: false })
+        .catch(err => console.error('Line chart error:', err));
+      vegaEmbed('#barChart',  barSpec,  { actions: false })
+        .catch(err => console.error('Bar chart error:', err));
+    })
+    .catch(err => console.error('Failed to load CSV:', err));
   </script>
 </body>
 </html>
