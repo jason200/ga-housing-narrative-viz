@@ -62,51 +62,61 @@
     const CSV_URL = 'https://jason200.github.io/ga-housing-narrative-viz/data/home_values.csv';
 
     d3.csv(CSV_URL).then(raw => {
-      // find Georgia
+      // 1) locate Georgia
       const row = raw.find(r => r.RegionName === 'Georgia');
-      // shape data into {date,value} array
+
+      // 2) turn each date-string into a real Date + numeric value
       const all = Object.entries(row)
         .filter(([k]) => /^\d{4}-\d{2}-\d{2}$/.test(k))
         .map(([d,v]) => ({ date: new Date(d), value: +v }));
 
-      // line chart spec
+      // --- Line chart spec ---
       const lineSpec = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-        "width": 500,
-        "height": 350,
+        "width": 500, "height": 350,
         "data": { "values": all },
         "mark": { "type": "line", "color": "#4682b4", "interpolate": "monotone" },
         "encoding": {
-          "x": { "field": "date", "type": "temporal", "title": "Year", "axis": { "format": "%Y", "tickCount": 6 } },
-          "y": { "field": "value", "type": "quantitative", "title": "Median Value ($)" },
+          "x": {
+            "field": "date", "type": "temporal", "title": "Year",
+            "axis": { "format":"%Y", "tickCount":6 }
+          },
+          "y": {
+            "field": "value", "type": "quantitative", "title": "Median Value ($)"
+          },
           "tooltip": [
-            { "field": "date", "title": "Month", "format": "%Y‑%m" },
-            { "field": "value", "title": "Median Value", "format": "$,.0f" }
+            { "field":"date","title":"Month","format":"%Y-%m" },
+            { "field":"value","title":"Median Value","format":"$,.0f" }
           ]
         }
       };
 
-      // bar chart data & spec
-      const snap2025 = all.filter(d => d.date.getFullYear() === 2025);
+      // --- Bar chart spec (2025 only) ---
+      const snapshot = all.filter(d => d.date.getFullYear() === 2025);
       const barSpec = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-        "width": 300,
-        "height": 350,
-        "data": { "values": snap2025 },
+        "width": 300, "height": 350,
+        "data": { "values": snapshot },
         "mark": "bar",
         "encoding": {
-          "x": { "field": "date", "type": "ordinal", "title": "Month of 2025", "axis": { "labelAngle": -45 } },
-          "y": { "field": "value", "type": "quantitative", "title": "Median Value ($)" },
+          "x": {
+            "field": "date", "type": "temporal", "timeUnit":"yearmonthdate",
+            "title": "Month of 2025",
+            "axis": { "format":"%Y-%m", "labelAngle": -45 }
+          },
+          "y": {
+            "field": "value", "type": "quantitative", "title": "Median Value ($)"
+          },
           "tooltip": [
-            { "field": "date", "title": "Month", "format": "%Y‑%m" },
-            { "field": "value", "title": "Median Value", "format": "$,.0f" }
+            { "field":"date","title":"Month","format":"%Y-%m" },
+            { "field":"value","title":"Median Value","format":"$,.0f" }
           ]
         }
       };
 
-      // embed both
-      vegaEmbed('#lineChart', lineSpec, { actions: false });
-      vegaEmbed('#barChart',  barSpec,  { actions: false });
+      // 3) render
+      vegaEmbed('#lineChart', lineSpec, { actions:false });
+      vegaEmbed('#barChart',  barSpec,  { actions:false });
     })
     .catch(err => console.error('CSV load error:', err));
   </script>
