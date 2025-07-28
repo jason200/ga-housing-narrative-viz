@@ -18,7 +18,9 @@
     .explanation { max-width: 900px; margin: 30px auto 10px; line-height: 1.6; }
     .explanation h2 { font-size: 1.5em; margin-bottom: 10px; }
     .explanation p { margin-bottom: 10px; }
-    #map { width: 100%; max-width: 900px; height: 600px; margin: 0 auto; }
+    /* Center the map container */
+    #map-wrapper { text-align: center; }
+    #map { display: inline-block; width: 900px; height: 600px; }
   </style>
 </head>
 <body>
@@ -40,7 +42,9 @@
     <p>Hover over each state to view its exact median value and compare patterns of housing affordability across regions.</p>
   </div>
 
-  <div id="map"></div>
+  <div id="map-wrapper">
+    <div id="map"></div>
+  </div>
 
   <script>
     const mapSpec = {
@@ -66,10 +70,7 @@
           }
         }
       ],
-      "mark": {
-        "type": "geoshape",
-        "stroke": "#ccc"
-      },
+      "mark": {"type": "geoshape", "stroke": "#ccc"},
       "encoding": {
         "color": {
           "field": "2025-01-31",
