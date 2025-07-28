@@ -59,66 +59,52 @@
   </footer>
 
   <script>
-    const CSV_URL = 'https://jason200.github.io/ga-housing-narrative-viz/data/home_values.csv';
+    const CSV_URL = 'https://raw.githubusercontent.com/jason200/ga-housing-narrative-viz/main/data/home_values.csv';
 
-    d3.csv(CSV_URL).then(raw => {
-      // 1) locate Georgia
-      const row = raw.find(r => r.RegionName === 'Georgia');
+    d3.csv(CSV_URL)
+      .then(raw => {
+        const row = raw.find(r => r.RegionName === 'Georgia');
+        const all = Object.entries(row)
+          .filter(([k]) => /^\d{4}-\d{2}-\d{2}$/.test(k))
+          .map(([d,v]) => ({ date: new Date(d), value: +v }));
 
-      // 2) turn each date-string into a real Date + numeric value
-      const all = Object.entries(row)
-        .filter(([k]) => /^\d{4}-\d{2}-\d{2}$/.test(k))
-        .map(([d,v]) => ({ date: new Date(d), value: +v }));
+        const lineSpec = {
+          "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+          "width": 500,
+          "height": 350,
+          "data": { "values": all },
+          "mark": { "type": "line", "color": "#4682b4", "interpolate": "monotone" },
+          "encoding": {
+            "x": { "field": "date", "type": "temporal", "title": "Year", "axis": { "format": "%Y", "tickCount": 6 } },
+            "y": { "field": "value", "type": "quantitative", "title": "Median Value ($)" },
+            "tooltip": [
+              { "field": "date", "title": "Month", "format": "%Y-%m" },
+              { "field": "value", "title": "Median Value", "format": "$, .0f" }
+            ]
+          }
+        };
 
-      // --- Line chart spec ---
-      const lineSpec = {
-        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-        "width": 500, "height": 350,
-        "data": { "values": all },
-        "mark": { "type": "line", "color": "#4682b4", "interpolate": "monotone" },
-        "encoding": {
-          "x": {
-            "field": "date", "type": "temporal", "title": "Year",
-            "axis": { "format":"%Y", "tickCount":6 }
-          },
-          "y": {
-            "field": "value", "type": "quantitative", "title": "Median Value ($)"
-          },
-          "tooltip": [
-            { "field":"date","title":"Month","format":"%Y-%m" },
-            { "field":"value","title":"Median Value","format":"$,.0f" }
-          ]
-        }
-      };
+        const snapshot = all.filter(d => d.date.getFullYear() === 2025);
+        const barSpec = {
+          "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+          "width": 300,
+          "height": 350,
+          "data": { "values": snapshot },
+          "mark": "bar",
+          "encoding": {
+            "x": { "field": "date", "type": "ordinal", "title": "Month of 2025", "axis": { "labelAngle": -45, "format": "%Y-%m" } },
+            "y": { "field": "value", "type": "quantitative", "title": "Median Value ($)" },
+            "tooltip": [
+              { "field": "date", "title": "Month", "format": "%Y-%m" },
+              { "field": "value", "title": "Median Value", "format": "$, .0f" }
+            ]
+          }
+        };
 
-      // --- Bar chart spec (2025 only) ---
-      const snapshot = all.filter(d => d.date.getFullYear() === 2025);
-      const barSpec = {
-        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-        "width": 300, "height": 350,
-        "data": { "values": snapshot },
-        "mark": "bar",
-        "encoding": {
-          "x": {
-            "field": "date", "type": "temporal", "timeUnit":"yearmonthdate",
-            "title": "Month of 2025",
-            "axis": { "format":"%Y-%m", "labelAngle": -45 }
-          },
-          "y": {
-            "field": "value", "type": "quantitative", "title": "Median Value ($)"
-          },
-          "tooltip": [
-            { "field":"date","title":"Month","format":"%Y-%m" },
-            { "field":"value","title":"Median Value","format":"$,.0f" }
-          ]
-        }
-      };
-
-      // 3) render
-      vegaEmbed('#lineChart', lineSpec, { actions:false });
-      vegaEmbed('#barChart',  barSpec,  { actions:false });
-    })
-    .catch(err => console.error('CSV load error:', err));
+        vegaEmbed('#lineChart', lineSpec, { actions: false });
+        vegaEmbed('#barChart',  barSpec,  { actions: false });
+      })
+      .catch(err => console.error('CSV load error:', err));
   </script>
 
 </body>
