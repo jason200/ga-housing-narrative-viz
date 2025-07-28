@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Georgia Home‑Value Dashboard</title>
 
+  <!-- D3 + Vega/Lite -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
@@ -21,6 +22,9 @@
     .chart { width: 100%; height: 350px; }
     .caption { text-align: center; font-weight: bold; margin-top: 10px; }
     .desc { text-align: center; font-size: 13px; color: #666; margin-top: 5px; }
+    footer { text-align: center; margin-top: 30px; }
+    footer a { margin: 0 10px; color: #5c2ca4; text-decoration: none; font-weight: bold; }
+    footer a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -48,7 +52,7 @@
     </div>
   </div>
 
-  <footer style="text-align:center; margin-top:30px;">
+  <footer>
     <a href="index.html">Overview view</a> |
     <a href="narrative.html">Narrative view</a> |
     <a href="map.html">Map view</a>
@@ -58,11 +62,14 @@
     const CSV_URL = 'https://jason200.github.io/ga-housing-narrative-viz/data/home_values.csv';
 
     d3.csv(CSV_URL).then(raw => {
+      // find Georgia
       const row = raw.find(r => r.RegionName === 'Georgia');
+      // shape data into {date,value} array
       const all = Object.entries(row)
         .filter(([k]) => /^\d{4}-\d{2}-\d{2}$/.test(k))
-        .map(([date, v]) => ({ date: new Date(date), value: +v }));
+        .map(([d,v]) => ({ date: new Date(d), value: +v }));
 
+      // line chart spec
       const lineSpec = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         "width": 500,
@@ -70,13 +77,8 @@
         "data": { "values": all },
         "mark": { "type": "line", "color": "#4682b4", "interpolate": "monotone" },
         "encoding": {
-          "x": {
-            "field": "date", "type": "temporal", "title": "Year",
-            "axis": { "format": "%Y", "tickCount": 6 }
-          },
-          "y": {
-            "field": "value", "type": "quantitative", "title": "Median Value ($)"
-          },
+          "x": { "field": "date", "type": "temporal", "title": "Year", "axis": { "format": "%Y", "tickCount": 6 } },
+          "y": { "field": "value", "type": "quantitative", "title": "Median Value ($)" },
           "tooltip": [
             { "field": "date", "title": "Month", "format": "%Y‑%m" },
             { "field": "value", "title": "Median Value", "format": "$,.0f" }
@@ -84,21 +86,17 @@
         }
       };
 
-      const snapshot = all.filter(d => d.date.getFullYear() === 2025);
+      // bar chart data & spec
+      const snap2025 = all.filter(d => d.date.getFullYear() === 2025);
       const barSpec = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         "width": 300,
         "height": 350,
-        "data": { "values": snapshot },
+        "data": { "values": snap2025 },
         "mark": "bar",
         "encoding": {
-          "x": {
-            "field": "date", "type": "ordinal", "title": "Month of 2025",
-            "axis": { "labelAngle": -45 }
-          },
-          "y": {
-            "field": "value", "type": "quantitative", "title": "Median Value ($)"
-          },
+          "x": { "field": "date", "type": "ordinal", "title": "Month of 2025", "axis": { "labelAngle": -45 } },
+          "y": { "field": "value", "type": "quantitative", "title": "Median Value ($)" },
           "tooltip": [
             { "field": "date", "title": "Month", "format": "%Y‑%m" },
             { "field": "value", "title": "Median Value", "format": "$,.0f" }
@@ -106,6 +104,7 @@
         }
       };
 
+      // embed both
       vegaEmbed('#lineChart', lineSpec, { actions: false });
       vegaEmbed('#barChart',  barSpec,  { actions: false });
     })
