@@ -4,13 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Georgia Home‑Value Dashboard</title>
-
-  <!-- D3 + Vega/Lite -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
-
   <style>
     body { font-family: Arial, sans-serif; margin: 40px; background: #fafafa; color: #333; }
     header { text-align: center; margin-bottom: 20px; }
@@ -59,53 +56,53 @@
   </footer>
 
   <script>
-    const CSV_URL = '/ga-housing-narrative-viz/data/home_values.csv';
+    const CSV_URL = 'https://jason200.github.io/ga-housing-narrative-viz/data/home_values.csv';
 
-    d3.csv(CSV_URL)
-      .then(raw => {
-        const row = raw.find(r => r.RegionName === 'Georgia');
-        const all = Object.entries(row)
-          .filter(([k]) => /^\d{4}-\d{2}-\d{2}$/.test(k))
-          .map(([d,v]) => ({ date: new Date(d), value: +v }));
+    d3.csv(CSV_URL).then(raw => {
+      console.log('Loaded rows:', raw.length);
+      const row = raw.find(r => r.RegionName === 'Georgia');
+      if (!row) {
+        console.error('Georgia row not found!');
+        return;
+      }
+      const all = Object.entries(row)
+        .filter(([k]) => /^\\d{4}-\\d{2}-\\d{2}$/.test(k))
+        .map(([d, v]) => ({ date: new Date(d), value: +v }));
 
-        const lineSpec = {
-          "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-          "width": 500,
-          "height": 350,
-          "data": { "values": all },
-          "mark": { "type": "line", "color": "#4682b4", "interpolate": "monotone" },
-          "encoding": {
-            "x": { "field": "date", "type": "temporal", "title": "Year", "axis": { "format": "%Y", "tickCount": 6 } },
-            "y": { "field": "value", "type": "quantitative", "title": "Median Value ($)" },
-            "tooltip": [
-              { "field": "date", "title": "Month", "format": "%Y-%m" },
-              { "field": "value", "title": "Median Value", "format": "$, .0f" }
-            ]
-          }
-        };
+      const lineSpec = {
+        \"$schema\": \"https://vega.github.io/schema/vega-lite/v5.json\",
+        \"width\": 500, \"height\": 350,
+        \"data\": { \"values\": all },
+        \"mark\": { \"type\": \"line\", \"color\": \"#4682b4\", \"interpolate\": \"monotone\" },
+        \"encoding\": {
+          \"x\": { \"field\": \"date\", \"type\": \"temporal\", \"title\": \"Year\", \"axis\": { \"format\": \"%Y\", \"tickCount\": 6 } },
+          \"y\": { \"field\": \"value\", \"type\": \"quantitative\", \"title\": \"Median Value ($)\" },
+          \"tooltip\": [
+            { \"field\": \"date\", \"title\": \"Month\", \"format\": \"%Y-%m\" },
+            { \"field\": \"value\", \"title\": \"Median Value\", \"format\": \"$,.0f\" }
+          ]
+        }
+      };
 
-        const snapshot = all.filter(d => d.date.getFullYear() === 2025);
-        const barSpec = {
-          "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-          "width": 300,
-          "height": 350,
-          "data": { "values": snapshot },
-          "mark": "bar",
-          "encoding": {
-            "x": { "field": "date", "type": "ordinal", "title": "Month of 2025", "axis": { "labelAngle": -45, "format": "%Y-%m" } },
-            "y": { "field": "value", "type": "quantitative", "title": "Median Value ($)" },
-            "tooltip": [
-              { "field": "date", "title": "Month", "format": "%Y-%m" },
-              { "field": "value", "title": "Median Value", "format": "$, .0f" }
-            ]
-          }
-        };
+      const snapshot = all.filter(d => d.date.getFullYear() === 2025);
+      const barSpec = {
+        \"$schema\": \"https://vega.github.io/schema/vega-lite/v5.json\",
+        \"width\": 300, \"height\": 350,
+        \"data\": { \"values\": snapshot },
+        \"mark\": \"bar\",
+        \"encoding\": {
+          \"x\": { \"field\": \"date\", \"type\": \"ordinal\", \"title\": \"Month of 2025\", \"axis\": { \"labelAngle\": -45, \"format\": \"%Y-%m\" } },
+          \"y\": { \"field\": \"value\", \"type\": \"quantitative\", \"title\": \"Median Value ($)\" },
+          \"tooltip\": [
+            { \"field\": \"date\", \"title\": \"Month\", \"format\": \"%Y-%m\" },
+            { \"field\": \"value\", \"title\": \"Median Value\", \"format\": \"$,.0f\" }
+          ]
+        }
+      };
 
-        vegaEmbed('#lineChart', lineSpec, { actions: false });
-        vegaEmbed('#barChart',  barSpec,  { actions: false });
-      })
-      .catch(err => console.error('CSV load error:', err));
+      vegaEmbed('#lineChart', lineSpec, { actions: false });
+      vegaEmbed('#barChart', barSpec, { actions: false });
+    }).catch(err => console.error('CSV load error:', err));
   </script>
-
 </body>
 </html>
