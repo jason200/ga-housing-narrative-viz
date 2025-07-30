@@ -126,19 +126,15 @@
   </div>
 
   <script>
-    // Point at your CSV on GitHub Pages (raw not needed for d3.csv on CDN)
     const CSV_URL = "https://jason200.github.io/ga-housing-narrative-viz/data/home_values.csv";
     d3.csv(CSV_URL).then(raw => {
-      // Find Georgia's row (case sensitive! Must match CSV header exactly)
       const geo = raw.find(r => r.RegionName === 'Georgia');
       if (!geo) throw new Error("Georgia not found in data");
 
-      // Shape into {date, value} array
       const all = Object.entries(geo)
         .filter(([k]) => /^\d{4}-\d{2}-\d{2}$/.test(k))
         .map(([date, value]) => ({ date, value: +value }));
 
-      // Line chart: all years
       const lineSpec = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         "width": 500,
@@ -151,7 +147,6 @@
         }
       };
 
-      // Bar chart: just 2025
       const snap2025 = all.filter(d => d.date.startsWith('2025-'));
       const barSpec = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
